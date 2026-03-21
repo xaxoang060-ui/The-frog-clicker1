@@ -120,7 +120,6 @@
             gap: 10px;
         }
 
-        /* КНОПКА-ЛЯГУШКА */
         .frog-btn {
             width: 300px;
             height: 300px;
@@ -1175,13 +1174,18 @@
         js = d.createElement(s); js.id = id;
         js.src = 'https://cdn.jsdelivr.net/gh/papa-torb/adtruth@latest/dist/adtruth.min.js';
         js.onload = function() {
-            AdTruth.init('at_3abd707677ff44388e94205dc245c57b');
-            console.log('AdTruth инициализирован');
+            if (typeof AdTruth !== 'undefined') {
+                AdTruth.init('at_3abd707677ff44388e94205dc245c57b');
+                console.log('✅ AdTruth инициализирован с ключом');
+            } else {
+                console.warn('⚠️ AdTruth загрузился, но объект недоступен');
+            }
+        };
+        js.onerror = function() {
+            console.error('❌ Не удалось загрузить AdTruth. Проверь ссылку на скрипт');
         };
         fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'adtruth-js'));
     </script>
 </body>
 </html>
-
-
