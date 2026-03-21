@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лягушкокликер · Магия Болота</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #c8e2d0 0%, #efd9c6 100%);
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .floating-lily {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .lily1 { top: 5%; left: 2%; animation-duration: 18s; }
+        .lily2 { bottom: 10%; right: 3%; animation-duration: 22s; font-size: 5rem; }
+        .lily3 { top: 20%; right: 15%; animation-duration: 14s; opacity: 0.1; font-size: 6rem; }
+
+        .game-wrapper {
+            max-width: 1400px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            align-items: stretch;
+        }
+
+        .frog-panel {
+            flex: 1.8;
+            min-width: 380px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 80px 80px 50px 50px;
+            padding: 40px 30px;
+            box-shadow: 0 30px 45px -15px #4a6b5b;
+            text-align: center;
+            border: 2px solid rgba(255, 250, 210, 0.8);
+            height: fit-content;
+            align-self: flex-start;
+        }
+
+        .lily-counter {
+            font-size: clamp(4rem, 15vw, 7rem);
+            font-weight: 900;
+            color: #1e4f3a;
+            text-shadow: 5px 5px 0 #ffe1b3, 0 0 25px #b3ffb0;
+            line-height: 1.1;
+            margin-bottom: 5px;
+            transition: transform 0.1s;
+        }
+
+        .lily-counter.boom {
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%,100% { transform: scale(1); }
+            25% { transform: scale(1.2) rotate(2deg); }
+            50% { transform: scale(1.1) rotate(-2deg); }
+        }
+
+        .score-label {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #3b6740;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            background: rgba(240, 235, 200, 0.6);
+            padding: 15px 20px;
+            border-radius: 40px;
+            border: 2px solid #ffefc0;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* КНОПКА-ЛЯГУШКА С КАРТИНКОЙ (встроенная Base64) */
+        .frog-btn {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 6px solid #fff3b3;
+            cursor: pointer;
+            margin: 15px auto;
+            box-shadow: 0 25px 0 #367a4d, 0 35px 40px -8px #1f4a31, inset 0 -10px 20px #2d814d;
+            transition: all 0.07s;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSIjNTZlNjdiIi8+PGNpcmNsZSBjeD0iNzAiIGN5PSI4MCIgcj0iMTIiIGZpbGw9IiNmZmZmZmYiLz48Y2lyY2xlIGN4PSIxMzAiIGN5PSI4MCIgcj0iMTIiIGZpbGw9IiNmZmZmZmYiLz48Y2lyY2xlIGN4PSI3MCIgY3k9IjgwIiByPSI1IiBmaWxsPSIjMDAwMDAwIi8+PGNpcmNsZSBjeD0iMTMwIiBjeT0iODAiIHI9IjUiIGZpbGw9IiMwMDAwMDAiLz48cGF0aCBkPSJNODAgMTIwIEM5MCAxMzUgMTEwIDEzNSAxMjAgMTIwIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+');
+        }
+
+        .frog-btn:active {
+            transform: translateY(18px);
+            box-shadow: 0 7px 0 #367a4d, 0 25px 30px -5px #1f4a31;
+        }
+
+        .frog-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+
+        .frog-btn.ripple::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            transition: 0.2s;
+        }
+
+        .shop-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .shop-btn {
+            background: #f3e1b3;
+            border: none;
+            color: #2b573b;
+            font-size: 1.1rem;
+            padding: 12px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #c4a26b;
+            transition: 0.05s;
+            font-weight: 600;
+            border: 2px solid #ffe6a3;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .shop-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0px 0 #c4a26b;
+        }
+
+        .shop-btn.active {
+            background: #ffd966;
+            box-shadow: 0 5px 0 #b88b44;
+        }
+
+        .shop-btn.ad-btn {
+            background: #ffd966;
+            color: #3d5e3d;
+        }
+
+        .ad-timer {
+            font-size: 0.9rem;
+            color: #b65f1e;
+            margin-top: 5px;
+        }
+
+        .save-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .save-btn {
+            background: #f3e1b3;
+            border: none;
+            color: #2b573b;
+            font-size: 1.3rem;
+            padding: 14px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 7px 0 #c4a26b;
+            transition: 0.05s;
+            font-weight: 700;
+            border: 2px solid #ffe6a3;
+            flex: 1;
+        }
+
+        .save-btn:active {
+            transform: translateY(7px);
+            box-shadow: 0 0px 0 #c4a26b;
+        }
+
+        .ip-info {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #4f7a5a;
+            background: rgba(255, 255, 200, 0.5);
+            padding: 8px 15px;
+            border-radius: 30px;
+            display: inline-block;
+        }
+
+        .upgrades-panel {
+            flex: 2.2;
+            min-width: 400px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 60px 60px 60px 60px;
+            padding: 25px 20px;
+            box-shadow: 0 30px 45px -15px #4a6b5b;
+            border: 2px solid #ffeac2;
+            max-height: 800px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            align-self: flex-start;
+        }
+
+        .upgrades-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .upgrades-panel::-webkit-scrollbar-track {
+            background: rgba(200, 220, 180, 0.3);
+            border-radius: 10px;
+        }
+
+        .upgrades-panel::-webkit-scrollbar-thumb {
+            background: #7c9a7c;
+            border-radius: 10px;
+            border: 2px solid #d4f0c0;
+        }
+
+        .upgrades-panel h2 {
+            font-size: 1.8rem;
+            text-align: center;
+            margin: 10px 0 20px;
+            color: #1c523c;
+            text-shadow: 2px 2px 0 #ffddb0;
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            padding: 10px 0;
+            border-radius: 40px 40px 0 0;
+            z-index: 5;
+        }
+
+        .upgrade-category {
+            background: rgba(220, 240, 210, 0.4);
+            border-radius: 30px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .upgrade-category h3 {
+            font-size: 1.4rem;
+            color: #1b553b;
+            margin-bottom: 15px;
+            padding-left: 10px;
+        }
+
+        .upgrade-item {
+            background: #fffcf0;
+            border-radius: 40px;
+            padding: 12px 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 5px 0 #ccb28b;
+            border: 2px solid #ffdcaa;
+            transition: 0.1s;
+        }
+
+        .upgrade-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .upgrade-item.purchased {
+            opacity: 0.7;
+            background: #e0e0d0;
+            box-shadow: 0 5px 0 #999999;
+        }
+
+        .upgrade-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #1b553b;
+        }
+
+        .upgrade-desc {
+            font-size: 0.8rem;
+            color: #4f6b4f;
+        }
+
+        .upgrade-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #b65f1e;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .buy-btn {
+            background: #ffda8b;
+            border: none;
+            font-size: 1.5rem;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b88b44;
+            transition: 0.05s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #285f38;
+            font-weight: bold;
+        }
+
+        .buy-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #b88b44;
+        }
+
+        .buy-btn:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .buy-btn.purchased {
+            background: #cccccc;
+            box-shadow: 0 4px 0 #888888;
+            color: #666666;
+        }
+
+        .building-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .building-stat {
+            background: #fffcf0;
+            border-radius: 20px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+
+        .floating-number {
+            position: absolute;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffd966;
+            text-shadow: 3px 3px 0 #2e7d32;
+            pointer-events: none;
+            z-index: 999;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 0; transform: translate(-50%, -150px) scale(1.5); }
+        }
+
+        .effect-particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            animation: particle 1s ease-out forwards;
+        }
+
+        @keyframes particle {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(0); opacity: 0; }
+        }
+
+        @media (max-width: 900px) {
+            .upgrades-panel {
+                max-height: 500px;
+            }
+            .frog-btn {
+                width: 250px;
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-lily lily1">🌸</div>
+    <div class="floating-lily lily2">🍀</div>
+    <div class="floating-lily lily3">🐸</div>
+
+    <div class="game-wrapper">
+        <div class="frog-panel">
+            <div class="score-label">🐸 КВА-ОЧКИ 🐸</div>
+            <div class="lily-counter" id="pointsDisplay">0</div>
+
+            <div class="stats">
+                <div class="stat-row">
+                    <span>⚡ За тык:</span>
+                    <span id="clickPowerDisplay">1</span>
+                </div>
+                <div class="stat-row">
+                    <span>🪰 Мух/сек:</span>
+                    <span id="cpsDisplay">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>✨ Множитель:</span>
+                    <span id="multDisplay">1</span>
+                </div>
+            </div>
+
+            <button class="frog-btn" id="clickButton"></button>
+
+            <div class="shop-buttons">
+                <button class="shop-btn" id="skinShopBtn">🎨 Скины</button>
+                <button class="shop-btn" id="effectShopBtn">✨ Эффекты</button>
+            </div>
+            
+            <div class="shop-buttons">
+                <button class="shop-btn ad-btn" id="adRewardBtn">📺 Награда</button>
+            </div>
+            <div class="ad-timer" id="adTimer">Доступно каждые 60 сек</div>
+
+            <div class="ip-info" id="ipDisplay">
+                🌐 Определяем ваш IP...
+            </div>
+
+            <div class="save-buttons">
+                <button class="save-btn" id="resetBtn">🔄 Сброс</button>
+            </div>
+        </div>
+
+        <div class="upgrades-panel">
+            <h2>🌿 ЛАВКА ЧУДЕС 🌿</h2>
+
+            <div id="skinShop" style="display: none;">
+                <div class="upgrade-category">
+                    <h3>🎨 СКИНЫ ЛЯГУШКИ</h3>
+                    <div id="skinUpgrades"></div>
+                </div>
+            </div>
+
+            <div id="effectShop" style="display: none;">
+                <div class="upgrade-category">
+                    <h3>✨ ВИЗУАЛЬНЫЕ ЭФФЕКТЫ</h3>
+                    <div id="effectUpgrades"></div>
+                </div>
+            </div>
+
+            <div class="upgrade-category">
+                <h3>🏡 ПОСТРОЙКИ</h3>
+                <div class="building-stats" id="buildingStats"></div>
+                <div id="buildingList"></div>
+            </div>
+
+            <div class="upgrade-category">
+                <h3>🏗️ УЛУЧШЕНИЯ ПОСТРОЕК</h3>
+                <div id="buildingUpgrades"></div>
+            </div>
+
+            <div class="upgrade-category">
+                <h3>🐸 ЛАПКИ И ЖУЧКИ</h3>
+                <div id="clickUpgrades"></div>
+            </div>
+
+            <div class="upgrade-category">
+                <h3>😺 БОЛОТНЫЕ КОТИКИ</h3>
+                <div id="kittenUpgrades"></div>
+            </div>
+
+            <div class="upgrade-category">
+                <h3>⚡ ДРУЖБА ПОСТРОЕК</h3>
+                <div id="synergyUpgrades"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // --- УТИЛИТЫ (COOKIE) ---
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return null;
+            }
+            function setCookie(name, value, days = 365) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                const expires = `expires=${date.toUTCString()}`;
+                document.cookie = `${name}=${value}; ${expires}; path=/; SameSite=Strict`;
+            }
+            function encrypt(data) {
+                return btoa(encodeURIComponent(JSON.stringify(data)));
+            }
+            function decrypt(encrypted) {
+                try {
+                    return JSON.parse(decodeURIComponent(atob(encrypted)));
+                } catch {
+                    return null;
+                }
+            }
+            async function getIP() {
+                let ip = getCookie('user_ip');
+                if (ip) {
+                    document.getElementById('ipDisplay').innerHTML = `🌐 Ваш IP: ${ip}`;
+                    return ip;
+                }
+                try {
+                    const response = await fetch('https://api.ipify.org?format=json');
+                    const data = await response.json();
+                    ip = data.ip;
+                    setCookie('user_ip', ip, 365);
+                    document.getElementById('ipDisplay').innerHTML = `🌐 Ваш IP: ${ip}`;
+                    return ip;
+                } catch {
+                    document.getElementById('ipDisplay').innerHTML = '🌐 Не удалось определить IP';
+                    return 'unknown_' + Math.random().toString(36).substring(7);
+                }
+            }
+            function loadGameByIP() {
+                const ip = getCookie('user_ip');
+                if (!ip) return null;
+                const cookieName = `frog_save_${ip.replace(/\./g, '_')}`;
+                const savedData = getCookie(cookieName);
+                if (savedData) {
+                    return decrypt(savedData);
+                }
+                return null;
+            }
+            function saveGameByIP(gameState) {
+                const ip = getCookie('user_ip');
+                if (!ip) return false;
+                const cookieName = `frog_save_${ip.replace(/\./g, '_')}`;
+                const encrypted = encrypt(gameState);
+                setCookie(cookieName, encrypted, 365);
+                return true;
+            }
+
+            // --- СОСТОЯНИЕ ИГРЫ ---
+            let points = 0;
+            let achievements = 0;
+            let currentSkin = 'default';
+            let currentEffect = 'none';
+            
+            const skins = [
+                { name: '🐸 Золотая Ква', emoji: '👑', class: 'skin-gold', cost: 10000, bought: false },
+                { name: '🌈 Радужная Ква', emoji: '🌈', class: 'skin-rainbow', cost: 50000, bought: false },
+                { name: '💎 Хрустальная Ква', emoji: '💎', class: 'skin-crystal', cost: 200000, bought: false }
+            ];
+            
+            const effects = [
+                { name: '🎉 Конфетти', desc: 'Разноцветное конфетти', cost: 5000, bought: false },
+                { name: '🍃 Листья', desc: 'Падающие листья кувшинок', cost: 25000, bought: false },
+                { name: '⭐ Звёздочки', desc: 'Болотные светлячки', cost: 75000, bought: false }
+            ];
+            
+            const buildings = [
+                { name: '🐸 Жабёнок', count: 0, baseCost: 15, cps: 0.1, upgrades: 0 },
+                { name: '👵 Ква-бабушка', count: 0, baseCost: 100, cps: 1, upgrades: 0 },
+                { name: '🌾 Кувшинка', count: 0, baseCost: 1100, cps: 8, upgrades: 0 },
+                { name: '⛏️ Норка', count: 0, baseCost: 12000, cps: 47, upgrades: 0 },
+                { name: '🏭 Мухозавод', count: 0, baseCost: 130000, cps: 260, upgrades: 0 },
+                { name: '🏦 Банк мух', count: 0, baseCost: 1.4e6, cps: 1400, upgrades: 0 },
+                { name: '🛕 Храм Ква', count: 0, baseCost: 20e6, cps: 7800, upgrades: 0 },
+                { name: '⚗️ Лаборатория', count: 0, baseCost: 330e6, cps: 44000, upgrades: 0 }
+            ];
+            
+            const clickUpgradesList = [
+                { name: '🐞 Маленький жучок', desc: '+1 за каждую жабёнка', cost: 100, bought: false },
+                { name: '🦗 Кузнечик', desc: '+0.1 за каждую жабёнка', cost: 500, bought: false },
+                { name: '🕷️ Паучок', desc: '+1 за каждую жабёнка', cost: 10000, bought: false },
+                { name: '🦟 Туча мух', desc: '+0.1 за все постройки', cost: 100000, bought: false },
+                { name: '🐝 Пчелиный рой', desc: '+0.5 за все постройки', cost: 10e6, bought: false },
+                { name: '🦋 Бабочка', desc: '+5 за все постройки', cost: 500e6, bought: false }
+            ];
+            
+            const buildingUpgradesList = [];
+            const tierNames = ['Обычный', 'Ягодный', 'Мшистый', 'Цветочный', 'Медовый', 'Солнечный', 'Лунный', 'Звёздный', 'Болотный', 'Древний', 'Магический', 'Волшебный', 'Легендарный'];
+            for (let b = 0; b < buildings.length; b++) {
+                for (let tier = 1; tier <= 13; tier++) {
+                    buildingUpgradesList.push({
+                        buildingId: b,
+                        tier: tier,
+                        name: `${buildings[b].name} (${tierNames[tier-1]})`,
+                        desc: `${buildings[b].name} дают x2 мух`,
+                        cost: buildings[b].baseCost * Math.pow(10, tier-1),
+                        bought: false
+                    });
+                }
+            }
+            
+            const kittenUpgradesList = [
+                { name: '😺 Болотный котик', desc: '+5% мух за достижения', cost: 9e6, bought: false },
+                { name: '😺 Котик-рыболов', desc: '+10% мух за достижения', cost: 9e7, bought: false },
+                { name: '😺 Котик-квакун', desc: '+15% мух за достижения', cost: 9e8, bought: false },
+                { name: '😺 Котик-шаман', desc: '+20% мух за достижения', cost: 9e9, bought: false }
+            ];
+            
+            const synergyList = [
+                { name: '🐸 Кувшинки + Лаборатория', desc: 'Каждые 15 кувшинок улучшают лабораторию', cost: 100e6, bought: false },
+                { name: '🐸 Норки + Лаборатория', desc: 'Каждые 15 норок улучшают лабораторию', cost: 200e6, bought: false },
+                { name: '🐸 Мухозавод + Лаборатория', desc: 'Каждые 15 мухозаводов улучшают лабораторию', cost: 300e6, bought: false },
+                { name: '🐸 Банк + Лаборатория', desc: 'Каждые 15 банков улучшают лабораторию', cost: 400e6, bought: false }
+            ];
+
+            // --- DOM ЭЛЕМЕНТЫ ---
+            const pointsDisplay = document.getElementById('pointsDisplay');
+            const clickPowerDisplay = document.getElementById('clickPowerDisplay');
+            const cpsDisplay = document.getElementById('cpsDisplay');
+            const clickButton = document.getElementById('clickButton');
+            
+            const skinShopDiv = document.getElementById('skinShop');
+            const effectShopDiv = document.getElementById('effectShop');
+            const skinUpgradesDiv = document.getElementById('skinUpgrades');
+            const effectUpgradesDiv = document.getElementById('effectUpgrades');
+            const buildingListDiv = document.getElementById('buildingList');
+            const buildingStatsDiv = document.getElementById('buildingStats');
+            const buildingUpgradesDiv = document.getElementById('buildingUpgrades');
+            const clickUpgradesDiv = document.getElementById('clickUpgrades');
+            const kittenUpgradesDiv = document.getElementById('kittenUpgrades');
+            const synergyUpgradesDiv = document.getElementById('synergyUpgrades');
+            
+            const skinShopBtn = document.getElementById('skinShopBtn');
+            const effectShopBtn = document.getElementById('effectShopBtn');
+            const adRewardBtn = document.getElementById('adRewardBtn');
+            const adTimer = document.getElementById('adTimer');
+            const resetBtn = document.getElementById('resetBtn');
+
+            // --- ТАЙМЕР РЕКЛАМЫ ---
+            let adCooldown = 0;
+            function updateAdTimer() {
+                if (adCooldown > 0) {
+                    adTimer.textContent = `⏳ Подождите ${adCooldown} сек`;
+                    adRewardBtn.disabled = true;
+                } else {
+                    adTimer.textContent = '📺 Доступно! Нажми для награды';
+                    adRewardBtn.disabled = false;
+                }
+            }
+            function startAdCooldown() {
+                adCooldown = 60;
+                updateAdTimer();
+                const interval = setInterval(() => {
+                    adCooldown--;
+                    updateAdTimer();
+                    if (adCooldown <= 0) clearInterval(interval);
+                }, 1000);
+            }
+
+            // --- ЗВУКИ ---
+            let audioContext = null;
+            function initAudio() {
+                if (audioContext) return;
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {}
+            }
+            function playCroakSound() {
+                if (!audioContext || audioContext.state !== 'running') return;
+                const now = audioContext.currentTime;
+                const osc1 = audioContext.createOscillator();
+                const osc2 = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc1.type = 'sawtooth';
+                osc2.type = 'triangle';
+                osc1.frequency.setValueAtTime(150, now);
+                osc1.frequency.exponentialRampToValueAtTime(90, now + 0.15);
+                osc2.frequency.setValueAtTime(220, now);
+                osc2.frequency.exponentialRampToValueAtTime(130, now + 0.12);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioContext.destination);
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 0.25);
+                osc2.stop(now + 0.25);
+            }
+            function playPurchaseSound() {
+                if (!audioContext || audioContext.state !== 'running') return;
+                const now = audioContext.currentTime;
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+
+            // --- ЭФФЕКТЫ ---
+            function createEffect(x, y, type) {
+                const effect = document.createElement('div');
+                effect.className = 'effect-particle';
+                effect.style.left = x + 'px';
+                effect.style.top = y + 'px';
+                switch(type) {
+                    case '🎉 Конфетти':
+                        effect.innerHTML = ['🎊', '🎉', '✨', '🎈'][Math.floor(Math.random() * 4)];
+                        break;
+                    case '🍃 Листья':
+                        effect.innerHTML = ['🍃', '🌿', '🍂'][Math.floor(Math.random() * 3)];
+                        break;
+                    case '⭐ Звёздочки':
+                        effect.innerHTML = '⭐';
+                        effect.style.color = '#ffd700';
+                        break;
+                    default:
+                        effect.innerHTML = '✨';
+                }
+                effect.style.fontSize = '2rem';
+                document.body.appendChild(effect);
+                setTimeout(() => effect.remove(), 1000);
+            }
+
+            // --- РАСЧЁТЫ ---
+            function getClickPower() {
+                let power = 1;
+                if (clickUpgradesList[0]?.bought) power += buildings[0].count;
+                if (clickUpgradesList[1]?.bought) power += buildings[0].count * 0.1;
+                if (clickUpgradesList[2]?.bought) power += buildings[0].count;
+                let buildingBonus = 0;
+                if (clickUpgradesList[3]?.bought) buildingBonus += 0.1;
+                if (clickUpgradesList[4]?.bought) buildingBonus += 0.5;
+                if (clickUpgradesList[5]?.bought) buildingBonus += 5;
+                if (buildingBonus > 0) {
+                    let totalBuildings = buildings.reduce((sum, b) => sum + b.count, 0);
+                    power += totalBuildings * buildingBonus;
+                }
+                return power;
+            }
+            function getBuildingCPS(buildingId) {
+                let base = buildings[buildingId].cps * buildings[buildingId].count;
+                let mult = Math.pow(2, buildings[buildingId].upgrades);
+                return base * mult;
+            }
+            function getTotalCPS() {
+                let total = 0;
+                for (let i = 0; i < buildings.length; i++) {
+                    total += getBuildingCPS(i);
+                }
+                let kittenMult = 1;
+                let kittenBonus = 0;
+                for (let kitten of kittenUpgradesList) {
+                    if (kitten.bought) kittenBonus += 0.05;
+                }
+                if (kittenBonus > 0) {
+                    kittenMult = 1 + (achievements * kittenBonus);
+                }
+                return total * kittenMult;
+            }
+
+            // --- ПОКУПКИ ---
+            window.buyBuilding = function(buildingId) {
+                const building = buildings[buildingId];
+                const cost = Math.floor(building.baseCost * Math.pow(1.15, building.count));
+                if (points >= cost) {
+                    points -= cost;
+                    building.count++;
+                    achievements = buildings.reduce((sum, b) => sum + b.count, 0);
+                    playPurchaseSound();
+                    refreshUI();
+                    autoSave();
+                }
+            };
+            window.buyClickUpgrade = function(index) {
+                const up = clickUpgradesList[index];
+                if (points >= up.cost && !up.bought) {
+                    points -= up.cost;
+                    up.bought = true;
+                    playPurchaseSound();
+                    refreshUI();
+                    autoSave();
+                }
+            };
+            window.buyBuildingUpgrade = function(index) {
+                const up = buildingUpgradesList[index];
+                if (points >= up.cost && !up.bought) {
+                    points -= up.cost;
+                    up.bought = true;
+                    buildings[up.buildingId].upgrades++;
+                    playPurchaseSound();
+                    refreshUI();
+                    autoSave();
+                }
+            };
+            window.buyKittenUpgrade = function(index) {
+                const up = kittenUpgradesList[index];
+                if (points >= up.cost && !up.bought) {
+                    points -= up.cost;
+                    up.bought = true;
+                    playPurchaseSound();
+                    refreshUI();
+                    autoSave();
+                }
+            };
+            window.buySynergyUpgrade = function(index) {
+                const up = synergyList[index];
+                if (points >= up.cost && !up.bought) {
+                    points -= up.cost;
+                    up.bought = true;
+                    playPurchaseSound();
+                    refreshUI();
+                    autoSave();
+                }
+            };
+            window.buySkin = function(index) {
+                const skin = skins[index];
+                if (points >= skin.cost && !skin.bought) {
+                    points -= skin.cost;
+                    skin.bought = true;
+                    if (currentSkin !== 'default') {
+                        clickButton.classList.remove(currentSkin);
+                    }
+                    clickButton.classList.add(skin.class);
+                    currentSkin = skin.class;
+                    playPurchaseSound();
+                    refreshUI();
+                    autoSave();
+                }
+            };
+            window.buyEffect = function(index) {
+                const effect = effects[index];
+                if (points >= effect.cost && !effect.bought) {
+                    points -= effect.cost;
+                    effect.bought = true;
+                    currentEffect = effect.name;
+                    playPurchaseSound();
+                    refreshUI();
+                    autoSave();
+                }
+            };
+
+            // --- ОБНОВЛЕНИЕ UI ---
+            function refreshUI() {
+                pointsDisplay.textContent = Math.floor(points);
+                clickPowerDisplay.textContent = getClickPower().toFixed(1);
+                cpsDisplay.textContent = getTotalCPS().toFixed(1);
+                
+                let buildingStatsHtml = '';
+                for (let i = 0; i < buildings.length; i++) {
+                    buildingStatsHtml += `
+                        <div class="building-stat">
+                            <span>${buildings[i].name}</span>
+                            <span>${buildings[i].count} (${getBuildingCPS(i).toFixed(1)}/c)</span>
+                        </div>
+                    `;
+                }
+                buildingStatsDiv.innerHTML = buildingStatsHtml;
+                
+                let buildingHtml = '';
+                for (let i = 0; i < buildings.length; i++) {
+                    const cost = Math.floor(buildings[i].baseCost * Math.pow(1.15, buildings[i].count));
+                    buildingHtml += `
+                        <div class="upgrade-item">
+                            <div>
+                                <div class="upgrade-name">${buildings[i].name}</div>
+                                <div class="upgrade-desc">${buildings[i].count} шт • ${getBuildingCPS(i).toFixed(1)}/c</div>
+                            </div>
+                            <div>
+                                <div class="upgrade-price">🐸 ${cost}</div>
+                                <button class="buy-btn" onclick="buyBuilding(${i})" ${points < cost ? 'disabled' : ''}>➕</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                buildingListDiv.innerHTML = buildingHtml;
+                
+                let clickHtml = '';
+                clickUpgradesList.forEach((up, index) => {
+                    clickHtml += `
+                        <div class="upgrade-item ${up.bought ? 'purchased' : ''}">
+                            <div>
+                                <div class="upgrade-name">${up.name}</div>
+                                <div class="upgrade-desc">${up.desc}</div>
+                            </div>
+                            <div>
+                                <div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div>
+                                <button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyClickUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                clickUpgradesDiv.innerHTML = clickHtml;
+                
+                let buildingUpgradeHtml = '';
+                buildingUpgradesList.forEach((up, index) => {
+                    if (buildings[up.buildingId].count > 0 || up.bought) {
+                        buildingUpgradeHtml += `
+                            <div class="upgrade-item ${up.bought ? 'purchased' : ''}">
+                                <div>
+                                    <div class="upgrade-name">${up.name}</div>
+                                    <div class="upgrade-desc">${up.desc}</div>
+                                </div>
+                                <div>
+                                    <div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div>
+                                    <button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyBuildingUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                buildingUpgradesDiv.innerHTML = buildingUpgradeHtml || '<div class="upgrade-item">Нет доступных улучшений</div>';
+                
+                let kittenHtml = '';
+                kittenUpgradesList.forEach((up, index) => {
+                    kittenHtml += `
+                        <div class="upgrade-item ${up.bought ? 'purchased' : ''}">
+                            <div>
+                                <div class="upgrade-name">${up.name}</div>
+                                <div class="upgrade-desc">${up.desc}</div>
+                            </div>
+                            <div>
+                                <div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div>
+                                <button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyKittenUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                kittenUpgradesDiv.innerHTML = kittenHtml;
+                
+                let synergyHtml = '';
+                synergyList.forEach((up, index) => {
+                    synergyHtml += `
+                        <div class="upgrade-item ${up.bought ? 'purchased' : ''}">
+                            <div>
+                                <div class="upgrade-name">${up.name}</div>
+                                <div class="upgrade-desc">${up.desc}</div>
+                            </div>
+                            <div>
+                                <div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div>
+                                <button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buySynergyUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                synergyUpgradesDiv.innerHTML = synergyHtml;
+                
+                let skinHtml = '';
+                skins.forEach((skin, index) => {
+                    const isCurrent = currentSkin === skin.class;
+                    skinHtml += `
+                        <div class="upgrade-item ${skin.bought ? 'purchased' : ''}">
+                            <div>
+                                <div class="upgrade-name">${skin.emoji} ${skin.name} ${isCurrent ? '✅' : ''}</div>
+                                <div class="upgrade-desc">${skin.bought ? 'Куплен' : 'Цена: ' + skin.cost}</div>
+                            </div>
+                            <div>
+                                <div class="upgrade-price">🐸 ${skin.cost}</div>
+                                <button class="buy-btn ${skin.bought ? 'purchased' : ''}" onclick="buySkin(${index})" ${skin.bought || points < skin.cost ? 'disabled' : ''}>${skin.bought ? '✓' : '➕'}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                skinUpgradesDiv.innerHTML = skinHtml;
+                
+                let effectHtml = '';
+                effects.forEach((effect, index) => {
+                    const isCurrent = currentEffect === effect.name;
+                    effectHtml += `
+                        <div class="upgrade-item ${effect.bought ? 'purchased' : ''}">
+                            <div>
+                                <div class="upgrade-name">${effect.name} ${isCurrent ? '✅' : ''}</div>
+                                <div class="upgrade-desc">${effect.desc}</div>
+                            </div>
+                            <div>
+                                <div class="upgrade-price">🐸 ${effect.cost}</div>
+                                <button class="buy-btn ${effect.bought ? 'purchased' : ''}" onclick="buyEffect(${index})" ${effect.bought || points < effect.cost ? 'disabled' : ''}>${effect.bought ? '✓' : '➕'}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                effectUpgradesDiv.innerHTML = effectHtml;
+            }
+
+            // --- КЛИК ПО ЛЯГУШКЕ ---
+            function handleClick() {
+                initAudio();
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                points += getClickPower();
+                playCroakSound();
+                
+                if (currentEffect !== 'none') {
+                    const rect = clickButton.getBoundingClientRect();
+                    const x = rect.left + rect.width/2 + window.scrollX;
+                    const y = rect.top + rect.height/2 + window.scrollY;
+                    
+                    if (currentEffect === '🎉 Конфетти') {
+                        for (let i = 0; i < 8; i++) {
+                            setTimeout(() => {
+                                createEffect(x + (Math.random()-0.5)*100, y + (Math.random()-0.5)*50, currentEffect);
+                            }, i * 50);
+                        }
+                    } else {
+                        for (let i = 0; i < 5; i++) {
+                            createEffect(x + (Math.random()-0.5)*80, y + (Math.random()-0.5)*80, currentEffect);
+                        }
+                    }
+                }
+                
+                pointsDisplay.style.transform = 'scale(1.2)';
+                setTimeout(() => pointsDisplay.style.transform = '', 100);
+                
+                refreshUI();
+            }
+
+            // --- НАГРАДА ---
+            function claimAdReward() {
+                if (adCooldown > 0) return;
+                const reward = 1000 + Math.floor(Math.random() * 2000);
+                points += reward;
+                playPurchaseSound();
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => {
+                        createEffect(window.innerWidth/2, window.innerHeight/2, '🎉 Конфетти');
+                    }, i * 50);
+                }
+                startAdCooldown();
+                refreshUI();
+            }
+
+            // --- СОХРАНЕНИЕ ---
+            function autoSave() {
+                const gameState = {
+                    points, currentSkin, currentEffect,
+                    buildings: buildings.map(b => ({ count: b.count, upgrades: b.upgrades })),
+                    skins: skins.map(s => s.bought),
+                    effects: effects.map(e => e.bought),
+                    clickUpgrades: clickUpgradesList.map(u => u.bought),
+                    kittenUpgrades: kittenUpgradesList.map(u => u.bought),
+                    synergies: synergyList.map(u => u.bought),
+                    buildingUpgrades: buildingUpgradesList.map(u => u.bought)
+                };
+                saveGameByIP(gameState);
+            }
+            function loadGame() {
+                const saved = loadGameByIP();
+                if (saved) {
+                    points = saved.points || 0;
+                    currentSkin = saved.currentSkin || 'default';
+                    currentEffect = saved.currentEffect || 'none';
+                    
+                    saved.buildings?.forEach((b, i) => {
+                        buildings[i].count = b.count;
+                        buildings[i].upgrades = b.upgrades;
+                    });
+                    saved.skins?.forEach((val, i) => { if (skins[i]) skins[i].bought = val; });
+                    saved.effects?.forEach((val, i) => { if (effects[i]) effects[i].bought = val; });
+                    saved.clickUpgrades?.forEach((val, i) => { if (clickUpgradesList[i]) clickUpgradesList[i].bought = val; });
+                    saved.kittenUpgrades?.forEach((val, i) => { if (kittenUpgradesList[i]) kittenUpgradesList[i].bought = val; });
+                    saved.synergies?.forEach((val, i) => { if (synergyList[i]) synergyList[i].bought = val; });
+                    saved.buildingUpgrades?.forEach((val, i) => { if (buildingUpgradesList[i]) buildingUpgradesList[i].bought = val; });
+                    
+                    achievements = buildings.reduce((sum, b) => sum + b.count, 0);
+                    if (currentSkin !== 'default') {
+                        clickButton.classList.add(currentSkin);
+                    }
+                }
+                refreshUI();
+            }
+
+            // --- ПЕРЕКЛЮЧЕНИЕ МАГАЗИНОВ ---
+            skinShopBtn.addEventListener('click', () => {
+                skinShopDiv.style.display = skinShopDiv.style.display === 'none' ? 'block' : 'none';
+                skinShopBtn.classList.toggle('active');
+            });
+            effectShopBtn.addEventListener('click', () => {
+                effectShopDiv.style.display = effectShopDiv.style.display === 'none' ? 'block' : 'none';
+                effectShopBtn.classList.toggle('active');
+            });
+
+            // --- АВТОСОХРАНЕНИЕ И АВТОКЛИК ---
+            setInterval(autoSave, 30000);
+            setInterval(function() {
+                points += getTotalCPS();
+                refreshUI();
+            }, 1000);
+
+            // --- СБРОС ---
+            resetBtn.addEventListener('click', () => {
+                if (confirm('Сбросить весь прогресс?')) {
+                    const ip = getCookie('user_ip');
+                    if (ip) {
+                        const cookieName = `frog_save_${ip.replace(/\./g, '_')}`;
+                        setCookie(cookieName, '', -1);
+                    }
+                    location.reload();
+                }
+            });
+
+            // --- ПОДПИСКИ ---
+            clickButton.addEventListener('click', handleClick);
+            adRewardBtn.addEventListener('click', claimAdReward);
+
+            // --- ИНИЦИАЛИЗАЦИЯ ---
+            async function init() {
+                await getIP();
+                loadGame();
+                initAudio();
+                skinShopDiv.style.display = 'none';
+                effectShopDiv.style.display = 'none';
+            }
+            init();
+        })();
+    </script>
+</body>
+</html>
