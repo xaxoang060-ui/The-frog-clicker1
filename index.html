@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лягушкокликер · Облачная админ-панель</title>
+    <title>Лягушкокликер</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -14,31 +15,132 @@
             position: relative;
             overflow-x: hidden;
         }
-        .mode-switch {
+        
+        /* Админ-панель (скрыта по умолчанию) */
+        .admin-mode {
+            display: none;
             position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .admin-panel {
+            max-width: 1600px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+            padding: 30px;
+            box-shadow: 0 30px 45px -15px #4a6b5b;
+        }
+        
+        .admin-header {
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
         }
-        .mode-btn {
-            background: #f3e1b3;
+        .admin-header h1 { color: #1e4f3a; font-size: 2rem; }
+        .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #fffcf0; border-radius: 30px; padding: 20px; text-align: center; box-shadow: 0 10px 0 #ccb28b; border: 2px solid #ffdcaa; }
+        .stat-card .value { font-size: 2.5rem; font-weight: 900; color: #b65f1e; }
+        .users-table { overflow-x: auto; }
+        .users-table table { width: 100%; border-collapse: collapse; background: #fffcf0; border-radius: 30px; overflow: hidden; font-size: 0.85rem; }
+        .users-table th, .users-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ffdcaa; }
+        .users-table th { background: #ffda8b; color: #1b553b; }
+        .delete-btn { background: #ff8a6f; border: none; color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; }
+        .export-btn, .sync-btn { background: #569e6b; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; }
+        .sync-btn { background: #4a7c59; margin-left: 10px; }
+        .close-admin { background: #ff8a6f; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; margin-left: 10px; }
+        .bot-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+        .bot-badge.bot { background: #ff8a6f; color: white; }
+        .bot-badge.human { background: #569e6b; color: white; }
+        
+        /* Парольный модальное окно */
+        .admin-password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .password-modal {
+            background: #fffcf0;
+            border-radius: 40px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 30px 45px -15px #4a6b5b;
+            border: 2px solid #ffdcaa;
+            max-width: 400px;
+            width: 90%;
+        }
+        .password-modal h2 { color: #1e4f3a; margin-bottom: 20px; }
+        .password-modal input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #ffdcaa;
+            border-radius: 30px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        .password-modal button {
+            background: #569e6b;
+            color: white;
             border: none;
-            color: #2b573b;
-            font-size: 1rem;
-            padding: 10px 20px;
-            border-radius: 50px;
+            padding: 12px 30px;
+            border-radius: 30px;
             cursor: pointer;
-            box-shadow: 0 5px 0 #c4a26b;
-            transition: 0.05s;
+            font-size: 1.1rem;
             font-weight: 600;
-            border: 2px solid #ffe6a3;
         }
-        .mode-btn:active { transform: translateY(5px); box-shadow: 0 0px 0 #c4a26b; }
-        .mode-btn.active { background: #ffd966; box-shadow: 0 5px 0 #b88b44; }
-        .game-mode { display: block; }
-        .admin-mode { display: none; }
+        .error-msg {
+            color: #ff8a6f;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        /* Секретная кнопка - видна только для админа (по IP) */
+        .admin-secret-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(86, 158, 107, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+            border: 2px solid #569e6b;
+        }
+        .admin-secret-btn:hover {
+            background: rgba(86, 158, 107, 0.8);
+            transform: scale(1.1);
+        }
+        
+        /* Для обычных игроков кнопка скрыта */
+        .admin-secret-btn.hidden {
+            display: none;
+        }
+        
         .floating-lily {
             position: absolute;
             font-size: 4rem;
@@ -55,6 +157,7 @@
         .lily1 { top: 5%; left: 2%; animation-duration: 18s; }
         .lily2 { bottom: 10%; right: 3%; animation-duration: 22s; font-size: 5rem; }
         .lily3 { top: 20%; right: 15%; animation-duration: 14s; opacity: 0.1; font-size: 6rem; }
+        
         .game-wrapper {
             max-width: 1400px;
             width: 100%;
@@ -229,22 +332,7 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 100% { opacity: 0; transform: translate(-50%, -150px) scale(1.5); } }
         .effect-particle { position: absolute; pointer-events: none; z-index: 1000; animation: particle 1s ease-out forwards; }
         @keyframes particle { 0% { transform: scale(1); opacity: 1; } 100% { transform: translateY(-50px) scale(0); opacity: 0; } }
-        .admin-panel { max-width: 1600px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border-radius: 40px; padding: 30px; box-shadow: 0 30px 45px -15px #4a6b5b; }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
-        .admin-header h1 { color: #1e4f3a; font-size: 2rem; }
-        .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #fffcf0; border-radius: 30px; padding: 20px; text-align: center; box-shadow: 0 10px 0 #ccb28b; border: 2px solid #ffdcaa; }
-        .stat-card .value { font-size: 2.5rem; font-weight: 900; color: #b65f1e; }
-        .users-table { overflow-x: auto; }
-        .users-table table { width: 100%; border-collapse: collapse; background: #fffcf0; border-radius: 30px; overflow: hidden; font-size: 0.85rem; }
-        .users-table th, .users-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ffdcaa; }
-        .users-table th { background: #ffda8b; color: #1b553b; }
-        .delete-btn { background: #ff8a6f; border: none; color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; }
-        .export-btn, .sync-btn { background: #569e6b; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; }
-        .sync-btn { background: #4a7c59; margin-left: 10px; }
-        .bot-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
-        .bot-badge.bot { background: #ff8a6f; color: white; }
-        .bot-badge.human { background: #569e6b; color: white; }
+        
         @media (max-width: 900px) { .upgrades-panel { max-height: 500px; } .frog-btn { width: 250px; height: 250px; } }
     </style>
 </head>
@@ -253,11 +341,10 @@
     <div class="floating-lily lily2">🍀</div>
     <div class="floating-lily lily3">🐸</div>
 
-    <div class="mode-switch">
-        <button class="mode-btn active" id="gameModeBtn">🎮 Игра</button>
-        <button class="mode-btn" id="adminModeBtn">📊 Админ-панель</button>
-    </div>
+    <!-- Секретная кнопка (будет видна только админу по IP) -->
+    <div class="admin-secret-btn hidden" id="adminSecretBtn" title="Админ-панель">🔑</div>
 
+    <!-- ИГРОВОЙ РЕЖИМ -->
     <div id="gameMode" class="game-mode">
         <div class="game-wrapper">
             <div class="frog-panel">
@@ -296,6 +383,7 @@
         </div>
     </div>
 
+    <!-- АДМИН-ПАНЕЛЬ (скрыта, открывается по паролю) -->
     <div id="adminMode" class="admin-mode">
         <div class="admin-panel">
             <div class="admin-header">
@@ -303,6 +391,7 @@
                 <div>
                     <button class="export-btn" id="exportDataBtn">📥 Экспорт</button>
                     <button class="sync-btn" id="syncFromCloudBtn">☁️ Синхронизировать</button>
+                    <button class="close-admin" id="closeAdminBtn">✖️ Закрыть</button>
                 </div>
             </div>
             <div class="stats-cards">
@@ -313,8 +402,8 @@
             </div>
             <div class="users-table">
                 <table>
-                    <thead><tr><th>IP</th><th>🤖</th><th>Очки</th><th>Время</th><th>User-Agent</th><th>Экран</th><th>Действия</th></tr></thead>
-                    <tbody id="usersTableBody"><tr><td colspan="7">Загрузка...</td></tr></tbody>
+                    <thead> <tr> <th>IP</th> <th>🤖</th> <th>Очки</th> <th>Время</th> <th>User-Agent</th> <th>Экран</th> <th>Действия</th> </tr> </thead>
+                    <tbody id="usersTableBody"></table><td colspan="7">Загрузка...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -322,19 +411,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script>
-        // ============= НАСТРОЙКИ SUPABASE =============
-        // 👇 ЗАМЕНИ НА СВОИ ДАННЫЕ ИЗ SUPABASE!
-        const SUPABASE_URL = 'https://kqneejsxzlooxvcmjdyc.supabase.co/';
+        // ============= НАСТРОЙКИ =============
+        const SUPABASE_URL = 'https://kqneejsxzlooxvcmjdyc.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbmVlanN4emxvb3h2Y21qZHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTA2NjksImV4cCI6MjA4OTYyNjY2OX0.ijOFmwa5JJGtyzBFLZsi0uZ6JgI0sowpxbAB7aLGgfM';
         
-        // ============= ПОЛНАЯ ВЕРСИЯ ИГРЫ =============
-        let points = 0;
-        let achievements = 0;
-        let currentSkin = 'default';
-        let currentEffect = 'none';
-        let usersData = {};
-        let currentIP = null;
-        let supabaseClient = null;
+        // ⚠️ ВАЖНО: ЗАМЕНИ НА СВОЙ IP-АДРЕС!
+        // Как узнать свой IP: открой игру, посмотри внизу экрана "🌐 IP: xxx.xxx.xxx.xxx"
+        const ADMIN_IP = '127.0.0.1';  // ← ЗАМЕНИ НА СВОЙ РЕАЛЬНЫЙ IP!
+        
+        // Пароль для админ-панели
+        const ADMIN_PASSWORD = 'admin123';  // ← ПОМЕНЯЙ ЭТОТ ПАРОЛЬ!
+        
+        // ============= ОСТАЛЬНОЙ КОД ИГРЫ =============
+        let points = 0, achievements = 0, currentSkin = 'default', currentEffect = 'none';
+        let usersData = {}, currentIP = null, supabaseClient = null;
         
         // СКИНЫ
         const skins = [
@@ -342,15 +432,11 @@
             { name: '🌈 Радужная Ква', emoji: '🌈', class: 'skin-rainbow', cost: 50000, bought: false },
             { name: '💎 Хрустальная Ква', emoji: '💎', class: 'skin-crystal', cost: 200000, bought: false }
         ];
-        
-        // ЭФФЕКТЫ
         const effects = [
             { name: '🎉 Конфетти', desc: 'Разноцветное конфетти', cost: 5000, bought: false },
             { name: '🍃 Листья', desc: 'Падающие листья кувшинок', cost: 25000, bought: false },
             { name: '⭐ Звёздочки', desc: 'Болотные светлячки', cost: 75000, bought: false }
         ];
-        
-        // ЗДАНИЯ
         const buildings = [
             { name: '🐸 Жабёнок', count: 0, baseCost: 15, cps: 0.1, upgrades: 0 },
             { name: '👵 Ква-бабушка', count: 0, baseCost: 100, cps: 1, upgrades: 0 },
@@ -361,8 +447,6 @@
             { name: '🛕 Храм Ква', count: 0, baseCost: 20e6, cps: 7800, upgrades: 0 },
             { name: '⚗️ Лаборатория', count: 0, baseCost: 330e6, cps: 44000, upgrades: 0 }
         ];
-        
-        // УЛУЧШЕНИЯ КЛИКА
         const clickUpgradesList = [
             { name: '🐞 Маленький жучок', desc: '+1 за каждую жабёнка', cost: 100, bought: false },
             { name: '🦗 Кузнечик', desc: '+0.1 за каждую жабёнка', cost: 500, bought: false },
@@ -371,8 +455,6 @@
             { name: '🐝 Пчелиный рой', desc: '+0.5 за все постройки', cost: 10e6, bought: false },
             { name: '🦋 Бабочка', desc: '+5 за все постройки', cost: 500e6, bought: false }
         ];
-        
-        // УЛУЧШЕНИЯ ЗДАНИЙ
         const buildingUpgradesList = [];
         const tierNames = ['Обычный', 'Ягодный', 'Мшистый', 'Цветочный', 'Медовый', 'Солнечный', 'Лунный', 'Звёздный', 'Болотный', 'Древний', 'Магический', 'Волшебный', 'Легендарный'];
         for (let b = 0; b < buildings.length; b++) {
@@ -386,16 +468,12 @@
                 });
             }
         }
-        
-        // КОТИКИ
         const kittenUpgradesList = [
             { name: '😺 Болотный котик', desc: '+5% мух за достижения', cost: 9e6, bought: false },
             { name: '😺 Котик-рыболов', desc: '+10% мух за достижения', cost: 9e7, bought: false },
             { name: '😺 Котик-квакун', desc: '+15% мух за достижения', cost: 9e8, bought: false },
             { name: '😺 Котик-шаман', desc: '+20% мух за достижения', cost: 9e9, bought: false }
         ];
-        
-        // СИНЕРГИИ
         const synergyList = [
             { name: '🐸 Кувшинки + Лаборатория', desc: 'Каждые 15 кувшинок улучшают лабораторию', cost: 100e6, bought: false },
             { name: '🐸 Норки + Лаборатория', desc: 'Каждые 15 норок улучшают лабораторию', cost: 200e6, bought: false },
@@ -403,7 +481,6 @@
             { name: '🐸 Банк + Лаборатория', desc: 'Каждые 15 банков улучшают лабораторию', cost: 400e6, bought: false }
         ];
         
-        // ФУНКЦИИ РАСЧЁТА
         function getClickPower() {
             let power = 1;
             if (clickUpgradesList[0]?.bought) power += buildings[0].count;
@@ -419,13 +496,7 @@
             }
             return power;
         }
-        
-        function getBuildingCPS(buildingId) {
-            let base = buildings[buildingId].cps * buildings[buildingId].count;
-            let mult = Math.pow(2, buildings[buildingId].upgrades);
-            return base * mult;
-        }
-        
+        function getBuildingCPS(buildingId) { return (buildings[buildingId].cps * buildings[buildingId].count) * Math.pow(2, buildings[buildingId].upgrades); }
         function getTotalCPS() {
             let total = 0;
             for (let i = 0; i < buildings.length; i++) total += getBuildingCPS(i);
@@ -435,18 +506,11 @@
             return total * kittenMult;
         }
         
-        // ЗВУКИ
         let audioContext = null;
-        function initAudio() {
-            if (audioContext) return;
-            try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-        }
+        function initAudio() { if (!audioContext) try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
         function playCroakSound() {
             if (!audioContext || audioContext.state !== 'running') return;
-            const now = audioContext.currentTime;
-            const osc1 = audioContext.createOscillator();
-            const osc2 = audioContext.createOscillator();
-            const gain = audioContext.createGain();
+            const now = audioContext.currentTime, osc1 = audioContext.createOscillator(), osc2 = audioContext.createOscillator(), gain = audioContext.createGain();
             osc1.type = 'sawtooth'; osc2.type = 'triangle';
             osc1.frequency.setValueAtTime(150, now); osc1.frequency.exponentialRampToValueAtTime(90, now + 0.15);
             osc2.frequency.setValueAtTime(220, now); osc2.frequency.exponentialRampToValueAtTime(130, now + 0.12);
@@ -456,332 +520,120 @@
         }
         function playPurchaseSound() {
             if (!audioContext || audioContext.state !== 'running') return;
-            const now = audioContext.currentTime;
-            const osc = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+            const now = audioContext.currentTime, osc = audioContext.createOscillator(), gain = audioContext.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
             gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
             osc.connect(gain); gain.connect(audioContext.destination);
             osc.start(now); osc.stop(now + 0.15);
         }
-        
-        // ЭФФЕКТЫ
         function createEffect(x, y, type) {
-            const effect = document.createElement('div');
-            effect.className = 'effect-particle';
-            effect.style.left = x + 'px';
-            effect.style.top = y + 'px';
+            const effect = document.createElement('div'); effect.className = 'effect-particle';
+            effect.style.left = x + 'px'; effect.style.top = y + 'px';
             switch(type) {
                 case '🎉 Конфетти': effect.innerHTML = ['🎊', '🎉', '✨', '🎈'][Math.floor(Math.random() * 4)]; break;
                 case '🍃 Листья': effect.innerHTML = ['🍃', '🌿', '🍂'][Math.floor(Math.random() * 3)]; break;
                 case '⭐ Звёздочки': effect.innerHTML = '⭐'; effect.style.color = '#ffd700'; break;
                 default: effect.innerHTML = '✨';
             }
-            effect.style.fontSize = '2rem';
-            document.body.appendChild(effect);
+            effect.style.fontSize = '2rem'; document.body.appendChild(effect);
             setTimeout(() => effect.remove(), 1000);
         }
         
-        // ПОКУПКИ
         window.buyBuilding = function(buildingId) {
-            const building = buildings[buildingId];
-            const cost = Math.floor(building.baseCost * Math.pow(1.15, building.count));
-            if (points >= cost) {
-                points -= cost;
-                building.count++;
-                achievements = buildings.reduce((sum, b) => sum + b.count, 0);
-                playPurchaseSound();
-                refreshUI();
-                autoSave();
-            }
+            const building = buildings[buildingId], cost = Math.floor(building.baseCost * Math.pow(1.15, building.count));
+            if (points >= cost) { points -= cost; building.count++; achievements = buildings.reduce((sum, b) => sum + b.count, 0); playPurchaseSound(); refreshUI(); autoSave(); }
         };
         window.buyClickUpgrade = function(index) {
             const up = clickUpgradesList[index];
-            if (points >= up.cost && !up.bought) {
-                points -= up.cost;
-                up.bought = true;
-                playPurchaseSound();
-                refreshUI();
-                autoSave();
-            }
+            if (points >= up.cost && !up.bought) { points -= up.cost; up.bought = true; playPurchaseSound(); refreshUI(); autoSave(); }
         };
         window.buyBuildingUpgrade = function(index) {
             const up = buildingUpgradesList[index];
-            if (points >= up.cost && !up.bought) {
-                points -= up.cost;
-                up.bought = true;
-                buildings[up.buildingId].upgrades++;
-                playPurchaseSound();
-                refreshUI();
-                autoSave();
-            }
+            if (points >= up.cost && !up.bought) { points -= up.cost; up.bought = true; buildings[up.buildingId].upgrades++; playPurchaseSound(); refreshUI(); autoSave(); }
         };
         window.buyKittenUpgrade = function(index) {
             const up = kittenUpgradesList[index];
-            if (points >= up.cost && !up.bought) {
-                points -= up.cost;
-                up.bought = true;
-                playPurchaseSound();
-                refreshUI();
-                autoSave();
-            }
+            if (points >= up.cost && !up.bought) { points -= up.cost; up.bought = true; playPurchaseSound(); refreshUI(); autoSave(); }
         };
         window.buySynergyUpgrade = function(index) {
             const up = synergyList[index];
-            if (points >= up.cost && !up.bought) {
-                points -= up.cost;
-                up.bought = true;
-                playPurchaseSound();
-                refreshUI();
-                autoSave();
-            }
+            if (points >= up.cost && !up.bought) { points -= up.cost; up.bought = true; playPurchaseSound(); refreshUI(); autoSave(); }
         };
         window.buySkin = function(index) {
             const skin = skins[index];
-            if (points >= skin.cost && !skin.bought) {
-                points -= skin.cost;
-                skin.bought = true;
-                if (currentSkin !== 'default') clickButton.classList.remove(currentSkin);
-                clickButton.classList.add(skin.class);
-                currentSkin = skin.class;
-                playPurchaseSound();
-                refreshUI();
-                autoSave();
-            }
+            if (points >= skin.cost && !skin.bought) { points -= skin.cost; skin.bought = true; if (currentSkin !== 'default') document.getElementById('clickButton').classList.remove(currentSkin); document.getElementById('clickButton').classList.add(skin.class); currentSkin = skin.class; playPurchaseSound(); refreshUI(); autoSave(); }
         };
         window.buyEffect = function(index) {
             const effect = effects[index];
-            if (points >= effect.cost && !effect.bought) {
-                points -= effect.cost;
-                effect.bought = true;
-                currentEffect = effect.name;
-                playPurchaseSound();
-                refreshUI();
-                autoSave();
-            }
+            if (points >= effect.cost && !effect.bought) { points -= effect.cost; effect.bought = true; currentEffect = effect.name; playPurchaseSound(); refreshUI(); autoSave(); }
         };
         
-        // ОБНОВЛЕНИЕ UI
         function refreshUI() {
             document.getElementById('pointsDisplay').textContent = Math.floor(points);
             document.getElementById('clickPowerDisplay').textContent = getClickPower().toFixed(1);
             document.getElementById('cpsDisplay').textContent = getTotalCPS().toFixed(1);
-            document.getElementById('multDisplay').textContent = (getTotalCPS() / (buildings.reduce((sum, b) => sum + b.cps * b.count, 0) || 1)).toFixed(1);
-            
             let buildingStatsHtml = '';
-            for (let i = 0; i < buildings.length; i++) {
-                buildingStatsHtml += `<div class="building-stat"><span>${buildings[i].name}</span><span>${buildings[i].count} (${getBuildingCPS(i).toFixed(1)}/c)</span></div>`;
-            }
+            for (let i = 0; i < buildings.length; i++) buildingStatsHtml += `<div class="building-stat"><span>${buildings[i].name}</span><span>${buildings[i].count} (${getBuildingCPS(i).toFixed(1)}/c)</span></div>`;
             document.getElementById('buildingStats').innerHTML = buildingStatsHtml;
-            
             let buildingHtml = '';
-            for (let i = 0; i < buildings.length; i++) {
-                const cost = Math.floor(buildings[i].baseCost * Math.pow(1.15, buildings[i].count));
-                buildingHtml += `<div class="upgrade-item"><div><div class="upgrade-name">${buildings[i].name}</div><div class="upgrade-desc">${buildings[i].count} шт • ${getBuildingCPS(i).toFixed(1)}/c</div></div><div><div class="upgrade-price">🐸 ${cost}</div><button class="buy-btn" onclick="buyBuilding(${i})" ${points < cost ? 'disabled' : ''}>➕</button></div></div>`;
-            }
+            for (let i = 0; i < buildings.length; i++) { const cost = Math.floor(buildings[i].baseCost * Math.pow(1.15, buildings[i].count)); buildingHtml += `<div class="upgrade-item"><div><div class="upgrade-name">${buildings[i].name}</div><div class="upgrade-desc">${buildings[i].count} шт • ${getBuildingCPS(i).toFixed(1)}/c</div></div><div><div class="upgrade-price">🐸 ${cost}</div><button class="buy-btn" onclick="buyBuilding(${i})" ${points < cost ? 'disabled' : ''}>➕</button></div></div>`; }
             document.getElementById('buildingList').innerHTML = buildingHtml;
-            
             let clickHtml = '';
-            clickUpgradesList.forEach((up, index) => {
-                clickHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyClickUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`;
-            });
+            clickUpgradesList.forEach((up, index) => { clickHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyClickUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`; });
             document.getElementById('clickUpgrades').innerHTML = clickHtml || '<div class="upgrade-item">Все улучшения куплены!</div>';
-            
             let buildingUpgradeHtml = '';
-            buildingUpgradesList.forEach((up, index) => {
-                if (buildings[up.buildingId].count > 0 || up.bought) {
-                    buildingUpgradeHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyBuildingUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`;
-                }
-            });
+            buildingUpgradesList.forEach((up, index) => { if (buildings[up.buildingId].count > 0 || up.bought) buildingUpgradeHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyBuildingUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`; });
             document.getElementById('buildingUpgrades').innerHTML = buildingUpgradeHtml || '<div class="upgrade-item">Нет доступных улучшений</div>';
-            
             let kittenHtml = '';
-            kittenUpgradesList.forEach((up, index) => {
-                kittenHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyKittenUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`;
-            });
+            kittenUpgradesList.forEach((up, index) => { kittenHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyKittenUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`; });
             document.getElementById('kittenUpgrades').innerHTML = kittenHtml;
-            
             let synergyHtml = '';
-            synergyList.forEach((up, index) => {
-                synergyHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buySynergyUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`;
-            });
+            synergyList.forEach((up, index) => { synergyHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buySynergyUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`; });
             document.getElementById('synergyUpgrades').innerHTML = synergyHtml;
-            
             let skinHtml = '';
-            skins.forEach((skin, index) => {
-                const isCurrent = currentSkin === skin.class;
-                skinHtml += `<div class="upgrade-item ${skin.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${skin.emoji} ${skin.name} ${isCurrent ? '✅' : ''}</div><div class="upgrade-desc">${skin.bought ? 'Куплен' : 'Цена: ' + skin.cost}</div></div><div><div class="upgrade-price">🐸 ${skin.cost}</div><button class="buy-btn ${skin.bought ? 'purchased' : ''}" onclick="buySkin(${index})" ${skin.bought || points < skin.cost ? 'disabled' : ''}>${skin.bought ? '✓' : '➕'}</button></div></div>`;
-            });
+            skins.forEach((skin, index) => { const isCurrent = currentSkin === skin.class; skinHtml += `<div class="upgrade-item ${skin.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${skin.emoji} ${skin.name} ${isCurrent ? '✅' : ''}</div><div class="upgrade-desc">${skin.bought ? 'Куплен' : 'Цена: ' + skin.cost}</div></div><div><div class="upgrade-price">🐸 ${skin.cost}</div><button class="buy-btn ${skin.bought ? 'purchased' : ''}" onclick="buySkin(${index})" ${skin.bought || points < skin.cost ? 'disabled' : ''}>${skin.bought ? '✓' : '➕'}</button></div></div>`; });
             document.getElementById('skinUpgrades').innerHTML = skinHtml;
-            
             let effectHtml = '';
-            effects.forEach((effect, index) => {
-                const isCurrent = currentEffect === effect.name;
-                effectHtml += `<div class="upgrade-item ${effect.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${effect.name} ${isCurrent ? '✅' : ''}</div><div class="upgrade-desc">${effect.desc}</div></div><div><div class="upgrade-price">🐸 ${effect.cost}</div><button class="buy-btn ${effect.bought ? 'purchased' : ''}" onclick="buyEffect(${index})" ${effect.bought || points < effect.cost ? 'disabled' : ''}>${effect.bought ? '✓' : '➕'}</button></div></div>`;
-            });
+            effects.forEach((effect, index) => { const isCurrent = currentEffect === effect.name; effectHtml += `<div class="upgrade-item ${effect.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${effect.name} ${isCurrent ? '✅' : ''}</div><div class="upgrade-desc">${effect.desc}</div></div><div><div class="upgrade-price">🐸 ${effect.cost}</div><button class="buy-btn ${effect.bought ? 'purchased' : ''}" onclick="buyEffect(${index})" ${effect.bought || points < effect.cost ? 'disabled' : ''}>${effect.bought ? '✓' : '➕'}</button></div></div>`; });
             document.getElementById('effectUpgrades').innerHTML = effectHtml;
         }
         
-        // КЛИК
         function handleClick() {
-            initAudio();
-            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
-            points += getClickPower();
-            playCroakSound();
-            if (currentEffect !== 'none') {
-                const rect = document.getElementById('clickButton').getBoundingClientRect();
-                const x = rect.left + rect.width/2 + window.scrollX;
-                const y = rect.top + rect.height/2 + window.scrollY;
-                for (let i = 0; i < 5; i++) createEffect(x + (Math.random()-0.5)*80, y + (Math.random()-0.5)*80, currentEffect);
-            }
-            document.getElementById('pointsDisplay').style.transform = 'scale(1.2)';
-            setTimeout(() => document.getElementById('pointsDisplay').style.transform = '', 100);
-            refreshUI();
-            autoSave();
+            initAudio(); if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+            points += getClickPower(); playCroakSound();
+            if (currentEffect !== 'none') { const rect = document.getElementById('clickButton').getBoundingClientRect(); const x = rect.left + rect.width/2 + window.scrollX; const y = rect.top + rect.height/2 + window.scrollY; for (let i = 0; i < 5; i++) createEffect(x + (Math.random()-0.5)*80, y + (Math.random()-0.5)*80, currentEffect); }
+            document.getElementById('pointsDisplay').style.transform = 'scale(1.2)'; setTimeout(() => document.getElementById('pointsDisplay').style.transform = '', 100);
+            refreshUI(); autoSave();
         }
         
-        // НАГРАДА
         let adCooldown = 0;
         function updateAdTimer() {
             const timer = document.getElementById('adTimer');
-            if (adCooldown > 0) {
-                timer.textContent = `⏳ Подождите ${adCooldown} сек`;
-                document.getElementById('adRewardBtn').disabled = true;
-            } else {
-                timer.textContent = '📺 Доступно! Нажми для награды';
-                document.getElementById('adRewardBtn').disabled = false;
-            }
+            if (adCooldown > 0) { timer.textContent = `⏳ Подождите ${adCooldown} сек`; document.getElementById('adRewardBtn').disabled = true; }
+            else { timer.textContent = '📺 Доступно! Нажми для награды'; document.getElementById('adRewardBtn').disabled = false; }
         }
         function claimAdReward() {
             if (adCooldown > 0) return;
-            points += 1000 + Math.floor(Math.random() * 2000);
-            playPurchaseSound();
+            points += 1000 + Math.floor(Math.random() * 2000); playPurchaseSound();
             for (let i = 0; i < 20; i++) setTimeout(() => createEffect(window.innerWidth/2, window.innerHeight/2, '🎉 Конфетти'), i * 50);
-            adCooldown = 60;
-            updateAdTimer();
-            const interval = setInterval(() => { adCooldown--; updateAdTimer(); if (adCooldown <= 0) clearInterval(interval); }, 1000);
-            refreshUI();
-            autoSave();
+            adCooldown = 60; updateAdTimer(); const interval = setInterval(() => { adCooldown--; updateAdTimer(); if (adCooldown <= 0) clearInterval(interval); }, 1000);
+            refreshUI(); autoSave();
         }
         
-        // СОХРАНЕНИЕ
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-            return null;
-        }
-        function setCookie(name, value, days = 365) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/; SameSite=Strict`;
-        }
+        function getCookie(name) { const value = `; ${document.cookie}`; const parts = value.split(`; ${name}=`); if (parts.length === 2) return parts.pop().split(';').shift(); return null; }
+        function setCookie(name, value, days = 365) { const date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/; SameSite=Strict`; }
         function encrypt(data) { return btoa(encodeURIComponent(JSON.stringify(data))); }
-        function decrypt(encrypted) {
-            try { return JSON.parse(decodeURIComponent(atob(encrypted))); } catch { return null; }
-        }
-        function saveGameByIP() {
-            if (!currentIP) return;
-            const gameState = {
-                points, currentSkin, currentEffect,
-                buildings: buildings.map(b => ({ count: b.count, upgrades: b.upgrades })),
-                skins: skins.map(s => s.bought),
-                effects: effects.map(e => e.bought),
-                clickUpgrades: clickUpgradesList.map(u => u.bought),
-                kittenUpgrades: kittenUpgradesList.map(u => u.bought),
-                synergies: synergyList.map(u => u.bought),
-                buildingUpgrades: buildingUpgradesList.map(u => u.bought)
-            };
-            setCookie(`frog_save_${currentIP.replace(/\./g, '_')}`, encrypt(gameState), 365);
-        }
-        function loadGameByIP() {
-            if (!currentIP) return null;
-            const saved = getCookie(`frog_save_${currentIP.replace(/\./g, '_')}`);
-            if (saved) return decrypt(saved);
-            return null;
-        }
-        function autoSave() {
-            saveGameByIP();
-            if (currentIP && usersData[currentIP]) {
-                usersData[currentIP].points = points;
-                usersData[currentIP].maxPoints = Math.max(usersData[currentIP].maxPoints || 0, points);
-                usersData[currentIP].totalPlayTime = (usersData[currentIP].totalPlayTime || 0) + 1;
-                usersData[currentIP].lastSeen = new Date().toISOString();
-                saveUsersData();
-                if (supabaseClient) syncToCloud(currentIP, usersData[currentIP]);
-            }
-        }
+        function decrypt(encrypted) { try { return JSON.parse(decodeURIComponent(atob(encrypted))); } catch { return null; } }
+        function saveGameByIP() { if (!currentIP) return; const gameState = { points, currentSkin, currentEffect, buildings: buildings.map(b => ({ count: b.count, upgrades: b.upgrades })), skins: skins.map(s => s.bought), effects: effects.map(e => e.bought), clickUpgrades: clickUpgradesList.map(u => u.bought), kittenUpgrades: kittenUpgradesList.map(u => u.bought), synergies: synergyList.map(u => u.bought), buildingUpgrades: buildingUpgradesList.map(u => u.bought) }; setCookie(`frog_save_${currentIP.replace(/\./g, '_')}`, encrypt(gameState), 365); }
+        function loadGameByIP() { if (!currentIP) return null; const saved = getCookie(`frog_save_${currentIP.replace(/\./g, '_')}`); if (saved) return decrypt(saved); return null; }
+        function autoSave() { saveGameByIP(); if (currentIP && usersData[currentIP]) { usersData[currentIP].points = points; usersData[currentIP].maxPoints = Math.max(usersData[currentIP].maxPoints || 0, points); usersData[currentIP].totalPlayTime = (usersData[currentIP].totalPlayTime || 0) + 1; usersData[currentIP].lastSeen = new Date().toISOString(); saveUsersData(); if (supabaseClient) syncToCloud(currentIP, usersData[currentIP]); } }
         
-        // SUPABASE
-        async function initSupabase() {
-            if (!SUPABASE_URL || SUPABASE_URL === 'https://hjilizbzbwvjfklzbmn.supabase.co' && SUPABASE_ANON_KEY.includes('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9')) {
-                document.getElementById('supabaseStatus').innerHTML = '⚠️ Вставь свои SUPABASE_URL и ANON_KEY в код';
-                return false;
-            }
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            document.getElementById('supabaseStatus').innerHTML = '✅ Supabase подключен';
-            return true;
-        }
+        async function initSupabase() { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); document.getElementById('supabaseStatus').innerHTML = '✅ Supabase подключен'; return true; }
+        async function syncToCloud(ip, userData) { if (!supabaseClient) return; const { error } = await supabaseClient.from('users').upsert({ ip: ip, points: userData.points || 0, max_points: userData.maxPoints || 0, play_time: userData.totalPlayTime || 0, visit_count: userData.visitCount || 1, user_agent: userData.clientInfo?.userAgent, platform: userData.clientInfo?.platform, language: userData.clientInfo?.language, screen_res: userData.clientInfo?.screenRes, is_touch_device: userData.clientInfo?.isTouchDevice, is_bot: userData.botDetection?.isBot, bot_score: userData.botDetection?.score, bot_reasons: userData.botDetection?.reasons, last_seen: new Date().toISOString() }, { onConflict: 'ip' }); if (error) console.error('Ошибка синхронизации:', error); }
+        async function loadAllUsers() { if (!supabaseClient) { alert('Supabase не настроен'); return; } const { data, error } = await supabaseClient.from('users').select('*').order('last_seen', { ascending: false }); if (error) { alert('Ошибка: ' + error.message); return; } const newData = {}; for (let u of data) { newData[u.ip] = { ip: u.ip, points: u.points || 0, maxPoints: u.max_points || 0, totalPlayTime: u.play_time || 0, visitCount: u.visit_count || 1, lastSeen: u.last_seen, clientInfo: { userAgent: u.user_agent, platform: u.platform, language: u.language, screenRes: u.screen_res, isTouchDevice: u.is_touch_device }, botDetection: { isBot: u.is_bot, score: u.bot_score, reasons: u.bot_reasons } }; } usersData = newData; saveUsersData(); refreshAdminPanel(); alert(`Загружено ${Object.keys(usersData).length} пользователей`); }
         
-        async function syncToCloud(ip, userData) {
-            if (!supabaseClient) return;
-            const { error } = await supabaseClient.from('users').upsert({
-                ip: ip,
-                points: userData.points || 0,
-                max_points: userData.maxPoints || 0,
-                play_time: userData.totalPlayTime || 0,
-                visit_count: userData.visitCount || 1,
-                user_agent: userData.clientInfo?.userAgent,
-                platform: userData.clientInfo?.platform,
-                language: userData.clientInfo?.language,
-                screen_res: userData.clientInfo?.screenRes,
-                is_touch_device: userData.clientInfo?.isTouchDevice,
-                is_bot: userData.botDetection?.isBot,
-                bot_score: userData.botDetection?.score,
-                bot_reasons: userData.botDetection?.reasons,
-                last_seen: new Date().toISOString()
-            }, { onConflict: 'ip' });
-            if (error) console.error('Ошибка синхронизации:', error);
-        }
-        
-        async function loadAllUsers() {
-            if (!supabaseClient) { alert('Supabase не настроен'); return; }
-            const { data, error } = await supabaseClient.from('users').select('*').order('last_seen', { ascending: false });
-            if (error) { alert('Ошибка: ' + error.message); return; }
-            const newData = {};
-            for (let u of data) {
-                newData[u.ip] = {
-                    ip: u.ip, points: u.points || 0, maxPoints: u.max_points || 0,
-                    totalPlayTime: u.play_time || 0, visitCount: u.visit_count || 1,
-                    lastSeen: u.last_seen,
-                    clientInfo: { userAgent: u.user_agent, platform: u.platform, language: u.language, screenRes: u.screen_res, isTouchDevice: u.is_touch_device },
-                    botDetection: { isBot: u.is_bot, score: u.bot_score, reasons: u.bot_reasons }
-                };
-            }
-            usersData = newData;
-            saveUsersData();
-            refreshAdminPanel();
-            alert(`Загружено ${Object.keys(usersData).length} пользователей`);
-        }
-        
-        // АДМИН-ПАНЕЛЬ
-        function detectBot(ua) {
-            const botPatterns = ['bot', 'crawler', 'spider', 'headless', 'puppeteer', 'selenium', 'curl'];
-            const isBot = botPatterns.some(p => ua.toLowerCase().includes(p));
-            return { isBot, score: isBot ? 3 : 0, reasons: isBot ? 'UA match' : 'normal' };
-        }
-        
-        function collectClientInfo() {
-            return {
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                language: navigator.language,
-                screenRes: `${window.screen.width}x${window.screen.height}`,
-                isTouchDevice: 'ontouchstart' in window || navigator.maxTouchPoints > 0
-            };
-        }
-        
+        function detectBot(ua) { const botPatterns = ['bot', 'crawler', 'spider', 'headless', 'puppeteer', 'selenium', 'curl']; const isBot = botPatterns.some(p => ua.toLowerCase().includes(p)); return { isBot, score: isBot ? 3 : 0, reasons: isBot ? 'UA match' : 'normal' }; }
+        function collectClientInfo() { return { userAgent: navigator.userAgent, platform: navigator.platform, language: navigator.language, screenRes: `${window.screen.width}x${window.screen.height}`, isTouchDevice: 'ontouchstart' in window || navigator.maxTouchPoints > 0 }; }
         function refreshAdminPanel() {
             const users = Object.values(usersData);
             document.getElementById('totalUsers').textContent = users.length;
@@ -789,69 +641,79 @@
             document.getElementById('totalHumans').textContent = users.length - users.filter(u => u.botDetection?.isBot).length;
             const totalTime = users.reduce((s, u) => s + (u.totalPlayTime || 0), 0);
             document.getElementById('totalPlayTime').textContent = Math.floor(totalTime / 3600) + ' ч';
-            
             const tbody = document.getElementById('usersTableBody');
             if (users.length === 0) { tbody.innerHTML = '.<td colspan="7">Нет данных</td>'; return; }
-            tbody.innerHTML = users.map(u => {
-                const ip = Object.keys(usersData).find(k => usersData[k] === u);
-                const isBot = u.botDetection?.isBot;
-                return `<tr>
-                    <td>${ip?.substring(0, 15)}</td>
-                    <td><span class="bot-badge ${isBot ? 'bot' : 'human'}">${isBot ? '🤖 БОТ' : '👤 ЧЕЛОВЕК'}</span></td>
-                    <td>${Math.floor(u.points || 0)}</td>
-                    <td>${Math.floor((u.totalPlayTime || 0) / 60)} мин</td>
-                    <td title="${u.clientInfo?.userAgent || ''}">${u.clientInfo?.userAgent?.substring(0, 50) || '?'}...</td>
-                    <td>${u.clientInfo?.screenRes || '?'}</td>
-                    <td><button class="delete-btn" onclick="deleteUser('${ip}')">Удалить</button></td>
-                </tr>`;
-            }).join('');
+            tbody.innerHTML = users.map(u => { const ip = Object.keys(usersData).find(k => usersData[k] === u); const isBot = u.botDetection?.isBot; return `<tr><td>${ip?.substring(0, 15)}</td><td><span class="bot-badge ${isBot ? 'bot' : 'human'}">${isBot ? '🤖 БОТ' : '👤 ЧЕЛОВЕК'}</span></td><td>${Math.floor(u.points || 0)}</td><td>${Math.floor((u.totalPlayTime || 0) / 60)} мин</td><td title="${u.clientInfo?.userAgent || ''}">${u.clientInfo?.userAgent?.substring(0, 50) || '?'}...</td><td>${u.clientInfo?.screenRes || '?'}</td><td><button class="delete-btn" onclick="deleteUser('${ip}')">Удалить</button></td></tr>`; }).join('');
         }
-        
         function saveUsersData() { localStorage.setItem('frog_users', JSON.stringify(usersData)); }
         function loadUsersData() { const saved = localStorage.getItem('frog_users'); if (saved) try { usersData = JSON.parse(saved); } catch(e) {} }
         window.deleteUser = function(ip) { if (confirm(`Удалить ${ip}?`)) { delete usersData[ip]; saveUsersData(); refreshAdminPanel(); } };
         
-        // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ
-        document.getElementById('gameModeBtn').onclick = () => {
-            document.getElementById('gameMode').style.display = 'block';
-            document.getElementById('adminMode').style.display = 'none';
-            document.getElementById('gameModeBtn').classList.add('active');
-            document.getElementById('adminModeBtn').classList.remove('active');
-        };
-        document.getElementById('adminModeBtn').onclick = () => {
-            document.getElementById('gameMode').style.display = 'none';
-            document.getElementById('adminMode').style.display = 'block';
-            document.getElementById('adminModeBtn').classList.add('active');
-            document.getElementById('gameModeBtn').classList.remove('active');
-            refreshAdminPanel();
+        // ============= АДМИН ПАНЕЛЬ С IP-ЗАЩИТОЙ =============
+        let isAdminAuthenticated = false;
+        const adminModeDiv = document.getElementById('adminMode');
+        const secretBtn = document.getElementById('adminSecretBtn');
+        
+        function showPasswordModal() {
+            const overlay = document.createElement('div');
+            overlay.className = 'admin-password-overlay';
+            overlay.id = 'adminPasswordOverlay';
+            overlay.innerHTML = `
+                <div class="password-modal">
+                    <h2>🔐 Доступ к админ-панели</h2>
+                    <input type="password" id="adminPassword" placeholder="Введите пароль" autofocus>
+                    <button id="submitPassword">Войти</button>
+                    <div class="error-msg" id="passwordError">Неверный пароль!</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            
+            document.getElementById('submitPassword').onclick = () => {
+                const input = document.getElementById('adminPassword').value;
+                if (input === ADMIN_PASSWORD) {
+                    isAdminAuthenticated = true;
+                    overlay.remove();
+                    adminModeDiv.style.display = 'block';
+                    refreshAdminPanel();
+                } else {
+                    document.getElementById('passwordError').style.display = 'block';
+                }
+            };
+            document.getElementById('adminPassword').onkeypress = (e) => { if (e.key === 'Enter') document.getElementById('submitPassword').click(); };
+        }
+        
+        // Показываем кнопку только если IP совпадает с ADMIN_IP
+        function checkAdminAccess(ip) {
+            if (ip === ADMIN_IP) {
+                secretBtn.classList.remove('hidden');
+                console.log('✅ Админ-доступ разрешён по IP');
+            } else {
+                secretBtn.classList.add('hidden');
+                console.log('❌ Админ-доступ запрещён (не ваш IP)');
+            }
+        }
+        
+        secretBtn.onclick = () => {
+            if (!isAdminAuthenticated) {
+                showPasswordModal();
+            } else {
+                adminModeDiv.style.display = 'block';
+                refreshAdminPanel();
+            }
         };
         
-        // ЭКСПОРТ
-        document.getElementById('exportDataBtn').onclick = () => {
-            const data = JSON.stringify(usersData, null, 2);
-            const blob = new Blob([data], {type: 'application/json'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `users_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-        };
+        // Закрытие админки
+        document.getElementById('closeAdminBtn').onclick = () => { adminModeDiv.style.display = 'none'; };
+        document.getElementById('exportDataBtn').onclick = () => { const data = JSON.stringify(usersData, null, 2); const blob = new Blob([data], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `users_${new Date().toISOString().slice(0,10)}.json`; a.click(); };
         document.getElementById('syncFromCloudBtn').onclick = () => loadAllUsers();
         
         // ПЕРЕКЛЮЧЕНИЕ МАГАЗИНОВ
-        document.getElementById('skinShopBtn').onclick = () => {
-            const el = document.getElementById('skinShop');
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
-        };
-        document.getElementById('effectShopBtn').onclick = () => {
-            const el = document.getElementById('effectShop');
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
-        };
-        document.getElementById('resetBtn').onclick = () => {
-            if (confirm('Сбросить весь прогресс?')) {
-                if (currentIP) setCookie(`frog_save_${currentIP.replace(/\./g, '_')}`, '', -1);
-                location.reload();
-            }
-        };
+        document.getElementById('skinShopBtn').onclick = () => { const el = document.getElementById('skinShop'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; };
+        document.getElementById('effectShopBtn').onclick = () => { const el = document.getElementById('effectShop'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; };
+        document.getElementById('resetBtn').onclick = () => { if (confirm('Сбросить весь прогресс?')) { if (currentIP) setCookie(`frog_save_${currentIP.replace(/\./g, '_')}`, '', -1); location.reload(); } };
+        
+        document.getElementById('clickButton').addEventListener('click', handleClick);
+        document.getElementById('adRewardBtn').addEventListener('click', claimAdReward);
         
         // ЗАПУСК
         (async function() {
@@ -862,7 +724,10 @@
                 else fetch('https://api.ipify.org?format=json').then(r => r.json()).then(data => { localStorage.setItem('user_ip', data.ip); resolve(data.ip); }).catch(() => resolve('unknown_' + Math.random().toString(36).substring(7)));
             });
             currentIP = ip;
-            document.getElementById('ipDisplay').innerHTML = `🌐 IP: ${currentIP}`;
+            document.getElementById('ipDisplay').innerHTML = `🌐 IP: ${currentIP.substring(0, 15)}`;
+            
+            // Проверяем, админ ли это
+            checkAdminAccess(currentIP);
             
             loadUsersData();
             const savedGame = loadGameByIP();
@@ -884,10 +749,7 @@
             const clientInfo = collectClientInfo();
             const botCheck = detectBot(clientInfo.userAgent);
             if (!usersData[currentIP]) {
-                usersData[currentIP] = {
-                    ip: currentIP, points: points, maxPoints: points, totalPlayTime: 0, visitCount: 1,
-                    clientInfo: clientInfo, botDetection: botCheck, lastSeen: new Date().toISOString()
-                };
+                usersData[currentIP] = { ip: currentIP, points: points, maxPoints: points, totalPlayTime: 0, visitCount: 1, clientInfo: clientInfo, botDetection: botCheck, lastSeen: new Date().toISOString() };
             } else {
                 usersData[currentIP].points = points;
                 usersData[currentIP].maxPoints = Math.max(usersData[currentIP].maxPoints || 0, points);
@@ -900,9 +762,6 @@
             
             refreshUI();
             initAudio();
-            
-            document.getElementById('clickButton').addEventListener('click', handleClick);
-            document.getElementById('adRewardBtn').addEventListener('click', claimAdReward);
             
             setInterval(() => { points += getTotalCPS(); refreshUI(); autoSave(); }, 1000);
             setInterval(autoSave, 30000);
