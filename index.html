@@ -1,22 +1,194 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лягушкокликер</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🐸 Лягушкокликер — Админ-панель</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body {
             background: linear-gradient(145deg, #c8e2d0 0%, #efd9c6 100%);
-            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            font-family: 'Segoe UI', Roboto, 'Comic Neue', system-ui, sans-serif;
             min-height: 100vh;
             padding: 20px;
             position: relative;
             overflow-x: hidden;
         }
-        
-        /* Админ-панель (скрыта по умолчанию) */
+        .floating-lily {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+            animation: float 15s infinite ease-in-out;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .lily1 { top: 5%; left: 2%; animation-duration: 18s; }
+        .lily2 { bottom: 10%; right: 3%; animation-duration: 22s; font-size: 5rem; }
+        .lily3 { top: 20%; right: 15%; animation-duration: 14s; opacity: 0.1; font-size: 6rem; }
+
+        .game-wrapper {
+            max-width: 1400px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            margin: 0 auto;
+        }
+        .frog-panel {
+            flex: 1.6;
+            min-width: 350px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 80px 80px 60px 60px;
+            padding: 30px 25px;
+            box-shadow: 0 30px 40px -15px rgba(60, 40, 20, 0.4);
+            text-align: center;
+            border: 2px solid rgba(255, 245, 200, 0.9);
+        }
+        .score-label {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c5a2e;
+            background: rgba(255, 250, 210, 0.7);
+            display: inline-block;
+            padding: 8px 24px;
+            border-radius: 40px;
+            margin-bottom: 15px;
+        }
+        .lily-counter {
+            font-size: clamp(3.5rem, 12vw, 6rem);
+            font-weight: 900;
+            color: #1a4f2a;
+            text-shadow: 5px 5px 0 #ffe1b3, 0 0 15px #b3ffb0;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        .frog-btn {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #b0de8c, #408a5e);
+            border: none;
+            cursor: pointer;
+            margin: 15px auto;
+            box-shadow: 0 18px 0 #2a6a3a, 0 25px 35px rgba(0,0,0,0.3);
+            transition: all 0.08s linear;
+            position: relative;
+            font-size: 6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff1b5;
+            text-shadow: 4px 6px 0 #2a6a3a;
+        }
+        .frog-btn:active { transform: translateY(12px); box-shadow: 0 6px 0 #2a6a3a, 0 20px 30px rgba(0,0,0,0.2); }
+        .frog-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,200,0.5) 0%, transparent 80%);
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+        .frog-btn.ripple::after { opacity: 1; transform: scale(1.5); transition: 0.2s; }
+        .frog-btn.skin-gold { background: radial-gradient(circle at 35% 35%, #ffd966, #c98a2e); text-shadow: 4px 6px 0 #8b5a2b; }
+        .frog-btn.skin-rainbow { background: linear-gradient(135deg, #ff6b6b, #f9c6c6, #ffd93d, #6bcb77, #4d96ff, #b980f0); text-shadow: 4px 6px 0 #333; }
+        .frog-btn.skin-crystal { background: radial-gradient(circle at 35% 35%, #b5f0ff, #4aa2c2); text-shadow: 4px 6px 0 #1e5f7a; }
+
+        .stats {
+            background: rgba(235, 225, 190, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 50px;
+            padding: 12px 20px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #fff7e8;
+            border-radius: 40px;
+            padding: 8px 20px;
+            flex: 1;
+            text-align: center;
+            box-shadow: inset 0 1px 3px #0001, 0 5px 8px #bba88a30;
+        }
+        .stat-card span:first-child { font-weight: 600; color: #3b5e3b; display: block; font-size: 0.9rem; }
+        .stat-card span:last-child { font-weight: 800; font-size: 1.5rem; color: #d47c2c; }
+
+        .upgrades-panel {
+            flex: 2.2;
+            min-width: 380px;
+            background: rgba(30, 40, 25, 0.65);
+            backdrop-filter: blur(14px);
+            border-radius: 60px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 2px solid #efdba1;
+            max-height: 85vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        .upgrades-panel::-webkit-scrollbar { width: 8px; }
+        .upgrades-panel::-webkit-scrollbar-track { background: #2d4127; border-radius: 10px; }
+        .upgrades-panel::-webkit-scrollbar-thumb { background: #f3c36b; border-radius: 10px; }
+        .upgrades-panel h2 { font-size: 2rem; text-align: center; color: #fff3cf; text-shadow: 3px 3px 0 #2c5a2e; margin-bottom: 20px; }
+        .upgrade-category { background: rgba(0, 0, 0, 0.4); border-radius: 40px; padding: 15px; margin-bottom: 25px; border: 1px solid #efdba1; }
+        .upgrade-category h3 { color: #ffe9a7; font-size: 1.4rem; margin-bottom: 12px; padding-left: 10px; display: flex; align-items: center; gap: 10px; }
+        .upgrade-item {
+            background: #fef8e7;
+            border-radius: 50px;
+            padding: 10px 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 0 #bba16d;
+            border: 1px solid #ffe3aa;
+        }
+        .upgrade-item.purchased { opacity: 0.65; background: #cfcfbb; box-shadow: 0 2px 0 #8b7550; filter: grayscale(0.1); }
+        .upgrade-name { font-weight: 800; font-size: 1.1rem; color: #315c2b; }
+        .upgrade-desc { font-size: 0.75rem; color: #5e6b4b; }
+        .upgrade-price { font-weight: 800; color: #c2591c; display: flex; align-items: center; gap: 5px; }
+        .buy-btn {
+            background: #ffcf7a;
+            border: none;
+            font-size: 1.5rem;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #bf8842;
+            transition: 0.03s linear;
+            font-weight: bold;
+            color: #2a5422;
+        }
+        .buy-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #bf8842; }
+        .buy-btn:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+        .building-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 12px; }
+        .building-stat { background: #fef3df; border-radius: 30px; padding: 6px 12px; display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 500; }
+        .floating-number { position: absolute; font-size: 2rem; font-weight: 900; color: #ffdb7e; text-shadow: 3px 3px 0 #ba6b2a; pointer-events: none; z-index: 1000; animation: floatUp 0.8s ease-out forwards; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.6); } 100% { opacity: 0; transform: translate(-50%, -180px) scale(1.6); } }
+        .effect-particle { position: absolute; font-size: 1.8rem; pointer-events: none; z-index: 1000; animation: pop 0.5s ease-out forwards; }
+        @keyframes pop { 0% { transform: scale(0.2); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+        .ip-info, .sync-status { font-size: 0.8rem; margin-top: 12px; background: #fff1cfaa; border-radius: 30px; padding: 6px 12px; display: inline-block; }
+        .shop-buttons { display: flex; gap: 12px; justify-content: center; margin: 15px 0; }
+        .shop-btn { background: #f7e2b0; border: none; padding: 8px 20px; border-radius: 40px; font-weight: bold; color: #33662c; cursor: pointer; box-shadow: 0 4px 0 #b3945c; transition: 0.05s; }
+        .shop-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b3945c; }
+        .reset-btn { background: #dba46a; color: #2d2b1a; }
+
+        /* АДМИН-ПАНЕЛЬ (скрытая) */
         .admin-mode {
             display: none;
             position: fixed;
@@ -29,7 +201,6 @@
             overflow-y: auto;
             padding: 20px;
         }
-        
         .admin-panel {
             max-width: 1600px;
             margin: 20px auto;
@@ -39,19 +210,11 @@
             padding: 30px;
             box-shadow: 0 30px 45px -15px #4a6b5b;
         }
-        
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
         .admin-header h1 { color: #1e4f3a; font-size: 2rem; }
         .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #fffcf0; border-radius: 30px; padding: 20px; text-align: center; box-shadow: 0 10px 0 #ccb28b; border: 2px solid #ffdcaa; }
-        .stat-card .value { font-size: 2.5rem; font-weight: 900; color: #b65f1e; }
+        .stat-card-admin { background: #fffcf0; border-radius: 30px; padding: 20px; text-align: center; box-shadow: 0 10px 0 #ccb28b; border: 2px solid #ffdcaa; }
+        .stat-card-admin .value { font-size: 2.5rem; font-weight: 900; color: #b65f1e; }
         .users-table { overflow-x: auto; }
         .users-table table { width: 100%; border-collapse: collapse; background: #fffcf0; border-radius: 30px; overflow: hidden; font-size: 0.85rem; }
         .users-table th, .users-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ffdcaa; }
@@ -63,57 +226,6 @@
         .bot-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
         .bot-badge.bot { background: #ff8a6f; color: white; }
         .bot-badge.human { background: #569e6b; color: white; }
-        
-        /* Парольный модальное окно */
-        .admin-password-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 3000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .password-modal {
-            background: #fffcf0;
-            border-radius: 40px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 30px 45px -15px #4a6b5b;
-            border: 2px solid #ffdcaa;
-            max-width: 400px;
-            width: 90%;
-        }
-        .password-modal h2 { color: #1e4f3a; margin-bottom: 20px; }
-        .password-modal input {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2rem;
-            border: 2px solid #ffdcaa;
-            border-radius: 30px;
-            margin-bottom: 20px;
-            outline: none;
-        }
-        .password-modal button {
-            background: #569e6b;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-        .error-msg {
-            color: #ff8a6f;
-            margin-top: 10px;
-            display: none;
-        }
-        
-        /* Секретная кнопка - видна только для админа (по IP) */
         .admin-secret-btn {
             position: fixed;
             bottom: 20px;
@@ -131,641 +243,314 @@
             transition: all 0.3s;
             border: 2px solid #569e6b;
         }
-        .admin-secret-btn:hover {
-            background: rgba(86, 158, 107, 0.8);
-            transform: scale(1.1);
-        }
-        
-        /* Для обычных игроков кнопка скрыта */
-        .admin-secret-btn.hidden {
-            display: none;
-        }
-        
-        .floating-lily {
-            position: absolute;
-            font-size: 4rem;
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: 0;
-            animation: float 15s infinite ease-in-out;
-        }
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-25px) rotate(5deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
-        }
-        .lily1 { top: 5%; left: 2%; animation-duration: 18s; }
-        .lily2 { bottom: 10%; right: 3%; animation-duration: 22s; font-size: 5rem; }
-        .lily3 { top: 20%; right: 15%; animation-duration: 14s; opacity: 0.1; font-size: 6rem; }
-        
-        .game-wrapper {
-            max-width: 1400px;
-            width: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 25px;
-            justify-content: center;
-            position: relative;
-            z-index: 10;
-            align-items: stretch;
-            margin: 0 auto;
-        }
-        .frog-panel {
-            flex: 1.8;
-            min-width: 380px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(8px);
-            border-radius: 80px 80px 50px 50px;
-            padding: 40px 30px;
-            box-shadow: 0 30px 45px -15px #4a6b5b;
-            text-align: center;
-            border: 2px solid rgba(255, 250, 210, 0.8);
-            height: fit-content;
-            align-self: flex-start;
-        }
-        .lily-counter {
-            font-size: clamp(4rem, 15vw, 7rem);
-            font-weight: 900;
-            color: #1e4f3a;
-            text-shadow: 5px 5px 0 #ffe1b3, 0 0 25px #b3ffb0;
-            line-height: 1.1;
-            margin-bottom: 5px;
-            transition: transform 0.1s;
-        }
-        .score-label {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #3b6740;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-        }
-        .stats {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 20px 0;
-            font-size: 1.2rem;
-            background: rgba(240, 235, 200, 0.6);
-            padding: 15px 20px;
-            border-radius: 40px;
-            border: 2px solid #ffefc0;
-        }
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .frog-btn {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            border: 6px solid #fff3b3;
-            cursor: pointer;
-            margin: 15px auto;
-            box-shadow: 0 25px 0 #367a4d, 0 35px 40px -8px #1f4a31, inset 0 -10px 20px #2d814d;
-            transition: all 0.07s;
-            position: relative;
-            overflow: hidden;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9Ijk1IiBmaWxsPSIjNTZlNjdiIi8+PGNpcmNsZSBjeD0iNzAiIGN5PSI4MCIgcj0iMTIiIGZpbGw9IiNmZmZmZmYiLz48Y2lyY2xlIGN4PSIxMzAiIGN5PSI4MCIgcj0iMTIiIGZpbGw9IiNmZmZmZmYiLz48Y2lyY2xlIGN4PSI3MCIgY3k9IjgwIiByPSI1IiBmaWxsPSIjMDAwMDAwIi8+PGNpcmNsZSBjeD0iMTMwIiBjeT0iODAiIHI9IjUiIGZpbGw9IiMwMDAwMDAiLz48cGF0aCBkPSJNODAgMTIwIEM5MCAxMzUgMTEwIDEzNSAxMjAgMTIwIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+');
-        }
-        .frog-btn:active { transform: translateY(18px); box-shadow: 0 7px 0 #367a4d, 0 25px 30px -5px #1f4a31; }
-        .frog-btn.skin-gold { filter: sepia(0.6) brightness(1.2); }
-        .frog-btn.skin-rainbow { filter: hue-rotate(90deg) saturate(2); }
-        .frog-btn.skin-crystal { filter: brightness(1.3) saturate(0.8); }
-        .shop-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0; }
-        .shop-btn {
-            background: #f3e1b3;
-            border: none;
-            color: #2b573b;
-            font-size: 1.1rem;
-            padding: 12px 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 5px 0 #c4a26b;
-            transition: 0.05s;
-            font-weight: 600;
-            border: 2px solid #ffe6a3;
-            flex: 1;
-            min-width: 150px;
-        }
-        .shop-btn:active { transform: translateY(5px); box-shadow: 0 0px 0 #c4a26b; }
-        .shop-btn.active { background: #ffd966; box-shadow: 0 5px 0 #b88b44; }
-        .shop-btn.ad-btn { background: #ffd966; color: #3d5e3d; }
-        .ad-timer { font-size: 0.9rem; color: #b65f1e; margin-top: 5px; }
-        .save-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 25px; }
-        .save-btn {
-            background: #f3e1b3;
-            border: none;
-            color: #2b573b;
-            font-size: 1.3rem;
-            padding: 14px 25px;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 7px 0 #c4a26b;
-            transition: 0.05s;
-            font-weight: 700;
-            border: 2px solid #ffe6a3;
-            flex: 1;
-        }
-        .save-btn:active { transform: translateY(7px); box-shadow: 0 0px 0 #c4a26b; }
-        .ip-info { margin-top: 15px; font-size: 1rem; color: #4f7a5a; background: rgba(255, 255, 200, 0.5); padding: 8px 15px; border-radius: 30px; display: inline-block; }
-        .supabase-status { margin-top: 10px; font-size: 0.8rem; color: #569e6b; }
-        .upgrades-panel {
-            flex: 2.2;
-            min-width: 400px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(8px);
-            border-radius: 60px;
-            padding: 25px 20px;
-            box-shadow: 0 30px 45px -15px #4a6b5b;
-            border: 2px solid #ffeac2;
-            max-height: 800px;
-            overflow-y: auto;
-        }
-        .upgrades-panel::-webkit-scrollbar { width: 8px; }
-        .upgrades-panel::-webkit-scrollbar-track { background: rgba(200, 220, 180, 0.3); border-radius: 10px; }
-        .upgrades-panel::-webkit-scrollbar-thumb { background: #7c9a7c; border-radius: 10px; }
-        .upgrades-panel h2 { font-size: 1.8rem; text-align: center; margin: 10px 0 20px; color: #1c523c; text-shadow: 2px 2px 0 #ffddb0; position: sticky; top: 0; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px); padding: 10px 0; border-radius: 40px; z-index: 5; }
-        .upgrade-category { background: rgba(220, 240, 210, 0.4); border-radius: 30px; padding: 15px; margin-bottom: 20px; }
-        .upgrade-category h3 { font-size: 1.4rem; color: #1b553b; margin-bottom: 15px; padding-left: 10px; }
-        .upgrade-item {
+        .admin-secret-btn:hover { background: rgba(86, 158, 107, 0.8); transform: scale(1.1); }
+        .admin-secret-btn.hidden { display: none; }
+        .password-modal {
             background: #fffcf0;
             border-radius: 40px;
-            padding: 12px 18px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 5px 0 #ccb28b;
-            border: 2px solid #ffdcaa;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
         }
-        .upgrade-item.purchased { opacity: 0.7; background: #e0e0d0; }
-        .upgrade-name { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 6px; color: #1b553b; }
-        .upgrade-desc { font-size: 0.8rem; color: #4f6b4f; }
-        .upgrade-price { font-size: 1.2rem; font-weight: 700; color: #b65f1e; display: flex; align-items: center; gap: 4px; }
-        .buy-btn {
-            background: #ffda8b;
-            border: none;
-            font-size: 1.5rem;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #b88b44;
-            transition: 0.05s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #285f38;
-            font-weight: bold;
-        }
-        .buy-btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #b88b44; }
-        .buy-btn:disabled { opacity: 0.4; pointer-events: none; }
-        .building-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-        .building-stat { background: #fffcf0; border-radius: 20px; padding: 8px 12px; display: flex; justify-content: space-between; font-size: 0.9rem; }
-        .floating-number { position: absolute; font-size: 2.2rem; font-weight: 900; color: #ffd966; text-shadow: 3px 3px 0 #2e7d32; pointer-events: none; z-index: 999; animation: floatUp 1s ease-out forwards; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 100% { opacity: 0; transform: translate(-50%, -150px) scale(1.5); } }
-        .effect-particle { position: absolute; pointer-events: none; z-index: 1000; animation: particle 1s ease-out forwards; }
-        @keyframes particle { 0% { transform: scale(1); opacity: 1; } 100% { transform: translateY(-50px) scale(0); opacity: 0; } }
-        
-        @media (max-width: 900px) { .upgrades-panel { max-height: 500px; } .frog-btn { width: 250px; height: 250px; } }
+        .password-modal input { width: 100%; padding: 15px; font-size: 1.2rem; border-radius: 30px; margin-bottom: 20px; }
+        @media (max-width: 800px) { .frog-btn { width: 210px; height: 210px; font-size: 4.5rem; } }
     </style>
 </head>
 <body>
-    <div class="floating-lily lily1">🌸</div>
-    <div class="floating-lily lily2">🍀</div>
-    <div class="floating-lily lily3">🐸</div>
+<div class="floating-lily lily1">🌸</div>
+<div class="floating-lily lily2">🍀</div>
+<div class="floating-lily lily3">🐸</div>
 
-    <!-- Секретная кнопка (будет видна только админу по IP) -->
-    <div class="admin-secret-btn hidden" id="adminSecretBtn" title="Админ-панель">🔑</div>
+<div class="admin-secret-btn hidden" id="adminSecretBtn">🔑</div>
 
-    <!-- ИГРОВОЙ РЕЖИМ -->
-    <div id="gameMode" class="game-mode">
-        <div class="game-wrapper">
-            <div class="frog-panel">
-                <div class="score-label">🐸 КВА-ОЧКИ 🐸</div>
-                <div class="lily-counter" id="pointsDisplay">0</div>
-                <div class="stats">
-                    <div class="stat-row"><span>⚡ За тык:</span><span id="clickPowerDisplay">1</span></div>
-                    <div class="stat-row"><span>🪰 Мух/сек:</span><span id="cpsDisplay">0</span></div>
-                    <div class="stat-row"><span>✨ Множитель:</span><span id="multDisplay">1</span></div>
-                </div>
-                <button class="frog-btn" id="clickButton"></button>
-                <div class="shop-buttons">
-                    <button class="shop-btn" id="skinShopBtn">🎨 Скины</button>
-                    <button class="shop-btn" id="effectShopBtn">✨ Эффекты</button>
-                </div>
-                <div class="shop-buttons">
-                    <button class="shop-btn ad-btn" id="adRewardBtn">📺 Награда</button>
-                </div>
-                <div class="ad-timer" id="adTimer">Доступно каждые 60 сек</div>
-                <div class="ip-info" id="ipDisplay">🌐 Определяем IP...</div>
-                <div class="supabase-status" id="supabaseStatus">🔄 Синхронизация...</div>
-                <div class="save-buttons">
-                    <button class="save-btn" id="resetBtn">🔄 Сброс</button>
-                </div>
-            </div>
-            <div class="upgrades-panel">
-                <h2>🌿 ЛАВКА ЧУДЕС 🌿</h2>
-                <div id="skinShop" style="display: none;"><div class="upgrade-category"><h3>🎨 СКИНЫ</h3><div id="skinUpgrades"></div></div></div>
-                <div id="effectShop" style="display: none;"><div class="upgrade-category"><h3>✨ ЭФФЕКТЫ</h3><div id="effectUpgrades"></div></div></div>
-                <div class="upgrade-category"><h3>🏡 ПОСТРОЙКИ</h3><div class="building-stats" id="buildingStats"></div><div id="buildingList"></div></div>
-                <div class="upgrade-category"><h3>🏗️ УЛУЧШЕНИЯ ПОСТРОЕК</h3><div id="buildingUpgrades"></div></div>
-                <div class="upgrade-category"><h3>🐸 ЛАПКИ И ЖУЧКИ</h3><div id="clickUpgrades"></div></div>
-                <div class="upgrade-category"><h3>😺 БОЛОТНЫЕ КОТИКИ</h3><div id="kittenUpgrades"></div></div>
-                <div class="upgrade-category"><h3>⚡ ДРУЖБА ПОСТРОЕК</h3><div id="synergyUpgrades"></div></div>
-            </div>
+<div class="game-wrapper">
+    <div class="frog-panel">
+        <div class="score-label">🐸 КВА-МОНЕТЫ 🐸</div>
+        <div class="lily-counter" id="pointsDisplay">0</div>
+        <div class="stats">
+            <div class="stat-card"><span>⚡ За тык</span><span id="clickPowerDisplay">1</span></div>
+            <div class="stat-card"><span>🪰 Мух/сек</span><span id="cpsDisplay">0</span></div>
+            <div class="stat-card"><span>✨ Множ.</span><span id="multDisplay">1</span></div>
         </div>
-    </div>
-
-    <!-- АДМИН-ПАНЕЛЬ (скрыта, открывается по паролю) -->
-    <div id="adminMode" class="admin-mode">
-        <div class="admin-panel">
-            <div class="admin-header">
-                <h1>🐸 Админ-панель · Облако</h1>
-                <div>
-                    <button class="export-btn" id="exportDataBtn">📥 Экспорт</button>
-                    <button class="sync-btn" id="syncFromCloudBtn">☁️ Синхронизировать</button>
-                    <button class="close-admin" id="closeAdminBtn">✖️ Закрыть</button>
-                </div>
-            </div>
-            <div class="stats-cards">
-                <div class="stat-card"><h3>👥 Всего</h3><div class="value" id="totalUsers">0</div></div>
-                <div class="stat-card"><h3>🤖 Ботов</h3><div class="value" id="totalBots">0</div></div>
-                <div class="stat-card"><h3>👤 Людей</h3><div class="value" id="totalHumans">0</div></div>
-                <div class="stat-card"><h3>⏱️ Время</h3><div class="value" id="totalPlayTime">0 ч</div></div>
-            </div>
-            <div class="users-table">
-                <table>
-                    <thead> <tr> <th>IP</th> <th>🤖</th> <th>Очки</th> <th>Время</th> <th>User-Agent</th> <th>Экран</th> <th>Действия</th> </tr> </thead>
-                    <tbody id="usersTableBody"></table><td colspan="7">Загрузка...</td></tr></tbody>
-                </table>
-            </div>
+        <button class="frog-btn" id="clickButton">🐸✨</button>
+        <div class="shop-buttons">
+            <button class="shop-btn" id="skinShopBtn">🎨 Скины</button>
+            <button class="shop-btn" id="effectShopBtn">✨ Эффекты</button>
+            <button class="shop-btn reset-btn" id="resetBtn">🔄 Сброс</button>
         </div>
+        <div class="ip-info" id="ipDisplay">🌐 Загрузка...</div>
+        <div class="sync-status" id="supabaseStatus">☁️ Синхронизация...</div>
     </div>
+    <div class="upgrades-panel">
+        <h2>🌿 ЛЯГУШАЧЬЯ ЛАВКА 🌿</h2>
+        <div id="skinShop" style="display: none;"><div class="upgrade-category"><h3>🎨 ЛЯГУШИНЫ ШКУРКИ</h3><div id="skinUpgrades"></div></div></div>
+        <div id="effectShop" style="display: none;"><div class="upgrade-category"><h3>✨ ВИЗУАЛЫ</h3><div id="effectUpgrades"></div></div></div>
+        <div class="upgrade-category"><h3>🏡 ПОСТРОЙКИ</h3><div id="buildingStats"></div><div id="buildingList"></div></div>
+        <div class="upgrade-category"><h3>🏗️ ТЕХНОЛОГИИ (x2 здание)</h3><div id="buildingUpgrades"></div></div>
+        <div class="upgrade-category"><h3>🐞 ЖУЧКИ & ЛАПКИ</h3><div id="clickUpgrades"></div></div>
+        <div class="upgrade-category"><h3>😺 БОЛОТНЫЕ КОТИКИ</h3><div id="kittenUpgrades"></div></div>
+        <div class="upgrade-category"><h3>⚡ КВА-СИНЕРГИИ</h3><div id="synergyUpgrades"></div></div>
+    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-    <script>
-        // ============= НАСТРОЙКИ =============
-        const SUPABASE_URL = 'https://kqneejsxzlooxvcmjdyc.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbmVlanN4emxvb3h2Y21qZHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTA2NjksImV4cCI6MjA4OTYyNjY2OX0.ijOFmwa5JJGtyzBFLZsi0uZ6JgI0sowpxbAB7aLGgfM';
-        
-        // ⚠️ ВАЖНО: ЗАМЕНИ НА СВОЙ IP-АДРЕС!
-        // Как узнать свой IP: открой игру, посмотри внизу экрана "🌐 IP: xxx.xxx.xxx.xxx"
-        const ADMIN_IP = '92.100.17.230';  // ← ЗАМЕНИ НА СВОЙ РЕАЛЬНЫЙ IP!
-        
-        // Пароль для админ-панели
-        const ADMIN_PASSWORD = '123123';  // ← ПОМЕНЯЙ ЭТОТ ПАРОЛЬ!
-        
-        // ============= ОСТАЛЬНОЙ КОД ИГРЫ =============
-        let points = 0, achievements = 0, currentSkin = 'default', currentEffect = 'none';
-        let usersData = {}, currentIP = null, supabaseClient = null;
-        
-        // СКИНЫ
-        const skins = [
-            { name: '🐸 Золотая Ква', emoji: '👑', class: 'skin-gold', cost: 10000, bought: false },
-            { name: '🌈 Радужная Ква', emoji: '🌈', class: 'skin-rainbow', cost: 50000, bought: false },
-            { name: '💎 Хрустальная Ква', emoji: '💎', class: 'skin-crystal', cost: 200000, bought: false }
-        ];
-        const effects = [
-            { name: '🎉 Конфетти', desc: 'Разноцветное конфетти', cost: 5000, bought: false },
-            { name: '🍃 Листья', desc: 'Падающие листья кувшинок', cost: 25000, bought: false },
-            { name: '⭐ Звёздочки', desc: 'Болотные светлячки', cost: 75000, bought: false }
-        ];
-        const buildings = [
-            { name: '🐸 Жабёнок', count: 0, baseCost: 15, cps: 0.1, upgrades: 0 },
-            { name: '👵 Ква-бабушка', count: 0, baseCost: 100, cps: 1, upgrades: 0 },
-            { name: '🌾 Кувшинка', count: 0, baseCost: 1100, cps: 8, upgrades: 0 },
-            { name: '⛏️ Норка', count: 0, baseCost: 12000, cps: 47, upgrades: 0 },
-            { name: '🏭 Мухозавод', count: 0, baseCost: 130000, cps: 260, upgrades: 0 },
-            { name: '🏦 Банк мух', count: 0, baseCost: 1.4e6, cps: 1400, upgrades: 0 },
-            { name: '🛕 Храм Ква', count: 0, baseCost: 20e6, cps: 7800, upgrades: 0 },
-            { name: '⚗️ Лаборатория', count: 0, baseCost: 330e6, cps: 44000, upgrades: 0 }
-        ];
-        const clickUpgradesList = [
-            { name: '🐞 Маленький жучок', desc: '+1 за каждую жабёнка', cost: 100, bought: false },
-            { name: '🦗 Кузнечик', desc: '+0.1 за каждую жабёнка', cost: 500, bought: false },
-            { name: '🕷️ Паучок', desc: '+1 за каждую жабёнка', cost: 10000, bought: false },
-            { name: '🦟 Туча мух', desc: '+0.1 за все постройки', cost: 100000, bought: false },
-            { name: '🐝 Пчелиный рой', desc: '+0.5 за все постройки', cost: 10e6, bought: false },
-            { name: '🦋 Бабочка', desc: '+5 за все постройки', cost: 500e6, bought: false }
-        ];
-        const buildingUpgradesList = [];
-        const tierNames = ['Обычный', 'Ягодный', 'Мшистый', 'Цветочный', 'Медовый', 'Солнечный', 'Лунный', 'Звёздный', 'Болотный', 'Древний', 'Магический', 'Волшебный', 'Легендарный'];
-        for (let b = 0; b < buildings.length; b++) {
-            for (let tier = 1; tier <= 13; tier++) {
-                buildingUpgradesList.push({
-                    buildingId: b, tier: tier,
-                    name: `${buildings[b].name} (${tierNames[tier-1]})`,
-                    desc: `${buildings[b].name} дают x2 мух`,
-                    cost: buildings[b].baseCost * Math.pow(10, tier-1),
-                    bought: false
-                });
-            }
+<div id="adminMode" class="admin-mode"><div class="admin-panel"><div class="admin-header"><h1>🐸 Админ-панель · Облако</h1><div><button class="export-btn" id="exportDataBtn">📥 Экспорт</button><button class="sync-btn" id="syncFromCloudBtn">☁️ Синхронизировать</button><button class="close-admin" id="closeAdminBtn">✖️ Закрыть</button></div></div><div class="stats-cards"><div class="stat-card-admin"><h3>👥 Всего</h3><div class="value" id="totalUsers">0</div></div><div class="stat-card-admin"><h3>🤖 Ботов</h3><div class="value" id="totalBots">0</div></div><div class="stat-card-admin"><h3>👤 Людей</h3><div class="value" id="totalHumans">0</div></div><div class="stat-card-admin"><h3>⏱️ Время</h3><div class="value" id="totalPlayTime">0 ч</div></div></div><div class="users-table"><table><thead><tr><th>IP</th><th>🤖</th><th>Очки</th><th>Время</th><th>User-Agent</th><th>Экран</th><th>Действия</th></tr></thead><tbody id="usersTableBody"><tr><td colspan="7">Загрузка...</td></tr></tbody></table></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+    // ========== НАСТРОЙКИ ==========
+    const SUPABASE_URL = 'https://kqneejsxzlooxvcmjdyc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbmVlanN4emxvb3h2Y21qZHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNTA2NjksImV4cCI6MjA4OTYyNjY2OX0.ijOFmwa5JJGtyzBFLZsi0uZ6JgI0sowpxbAB7aLGgfM';
+    const ADMIN_IP = '92.100.17.230';   // ЗАМЕНИТЕ НА ВАШ РЕАЛЬНЫЙ IP
+    const ADMIN_PASSWORD = '123'; // ЗАМЕНИТЕ НА СВОЙ ПАРОЛЬ
+
+    let points = 0, achievementsTotal = 0, currentSkin = 'default', currentEffect = 'none';
+    let usersData = {}, currentIP = null, supabaseClient = null;
+    let isAdminAuthenticated = false;
+
+    // ---------- ИГРОВЫЕ ДАННЫЕ (каноничный кликер) ----------
+    const skins = [
+        { name: '🐸 Золотая ква', emoji: '🏆', class: 'skin-gold', cost: 25000, bought: false },
+        { name: '🌈 Радужная жаба', emoji: '🌈', class: 'skin-rainbow', cost: 120000, bought: false },
+        { name: '💎 Хрустальная', emoji: '💎', class: 'skin-crystal', cost: 450000, bought: false }
+    ];
+    const effects = [
+        { name: '🎉 Конфетти', desc: 'Клик – праздник', cost: 8000, bought: false },
+        { name: '🍃 Листопад', desc: 'Осеннее болото', cost: 35000, bought: false },
+        { name: '⭐ Звёздная пыль', desc: 'Магия', cost: 180000, bought: false }
+    ];
+    const buildings = [
+        { name: '🐸 Жабёнок', count: 0, baseCost: 18, cps: 0.12, upgrades: 0 },
+        { name: '👵 Ква-бабка', count: 0, baseCost: 120, cps: 1.0, upgrades: 0 },
+        { name: '🌾 Кувшинка', count: 0, baseCost: 1300, cps: 7, upgrades: 0 },
+        { name: '⛏️ Норка', count: 0, baseCost: 14000, cps: 45, upgrades: 0 },
+        { name: '🏭 Мухоз-завод', count: 0, baseCost: 150000, cps: 240, upgrades: 0 },
+        { name: '🏦 Банк мух', count: 0, baseCost: 1.6e6, cps: 1300, upgrades: 0 },
+        { name: '🛕 Храм Ква', count: 0, baseCost: 24e6, cps: 7200, upgrades: 0 },
+        { name: '⚗️ Лаборатория', count: 0, baseCost: 380e6, cps: 41000, upgrades: 0 }
+    ];
+    const clickUpgradesList = [
+        { name: '🐞 Маленький жучок', desc: '+1 к тыку за жабёнка', cost: 200, bought: false },
+        { name: '🦗 Кузнечик', desc: '+0.2 к тыку за жабёнка', cost: 1000, bought: false },
+        { name: '🕷️ Паучок', desc: '+1 к тыку за жабёнка', cost: 12000, bought: false },
+        { name: '🦟 Туча мух', desc: '+0.2 за каждое здание', cost: 150000, bought: false },
+        { name: '🐝 Рой', desc: '+0.7 за каждое здание', cost: 13e6, bought: false },
+        { name: '🦋 Бабочка', desc: '+5 за каждое здание', cost: 700e6, bought: false }
+    ];
+    const buildingUpgradesList = [];
+    const tierNames = ['Обычный','Ягодный','Мшистый','Цветочный','Медовый','Солнечный','Лунный','Звёздный','Болотный','Древний','Магический','Волшебный','Легендарный'];
+    for (let i=0; i<buildings.length; i++) {
+        for (let t=1; t<=13; t++) {
+            buildingUpgradesList.push({ buildingId: i, tier: t, name: `${buildings[i].name} (${tierNames[t-1]})`, desc: `x2 производство`, cost: buildings[i].baseCost * Math.pow(9.5, t-1), bought: false });
         }
-        const kittenUpgradesList = [
-            { name: '😺 Болотный котик', desc: '+5% мух за достижения', cost: 9e6, bought: false },
-            { name: '😺 Котик-рыболов', desc: '+10% мух за достижения', cost: 9e7, bought: false },
-            { name: '😺 Котик-квакун', desc: '+15% мух за достижения', cost: 9e8, bought: false },
-            { name: '😺 Котик-шаман', desc: '+20% мух за достижения', cost: 9e9, bought: false }
-        ];
-        const synergyList = [
-            { name: '🐸 Кувшинки + Лаборатория', desc: 'Каждые 15 кувшинок улучшают лабораторию', cost: 100e6, bought: false },
-            { name: '🐸 Норки + Лаборатория', desc: 'Каждые 15 норок улучшают лабораторию', cost: 200e6, bought: false },
-            { name: '🐸 Мухозавод + Лаборатория', desc: 'Каждые 15 мухозаводов улучшают лабораторию', cost: 300e6, bought: false },
-            { name: '🐸 Банк + Лаборатория', desc: 'Каждые 15 банков улучшают лабораторию', cost: 400e6, bought: false }
-        ];
-        
-        function getClickPower() {
-            let power = 1;
-            if (clickUpgradesList[0]?.bought) power += buildings[0].count;
-            if (clickUpgradesList[1]?.bought) power += buildings[0].count * 0.1;
-            if (clickUpgradesList[2]?.bought) power += buildings[0].count;
-            let buildingBonus = 0;
-            if (clickUpgradesList[3]?.bought) buildingBonus += 0.1;
-            if (clickUpgradesList[4]?.bought) buildingBonus += 0.5;
-            if (clickUpgradesList[5]?.bought) buildingBonus += 5;
-            if (buildingBonus > 0) {
-                let totalBuildings = buildings.reduce((sum, b) => sum + b.count, 0);
-                power += totalBuildings * buildingBonus;
-            }
-            return power;
+    }
+    const kittenUpgradesList = [
+        { name: '😺 Болотный кот', desc: '+5% к доходу за каждые 3 постройки', cost: 8e6, bought: false },
+        { name: '😺 Кото-рыбак', desc: '+10% к доходу за каждые 3 постройки', cost: 80e6, bought: false },
+        { name: '😺 Шаман-кот', desc: '+15% к доходу за каждые 3 постройки', cost: 900e6, bought: false },
+        { name: '😺 Ква-котикс', desc: '+20% к доходу за каждые 3 постройки', cost: 11e9, bought: false }
+    ];
+    const synergyList = [
+        { name: '🌾 Кувшинка → Лаба', desc: '+5% к лаборатории за 15 кувшинок', cost: 120e6, bought: false },
+        { name: '⛏️ Норка → Лаба', desc: '+5% к лаборатории за 15 норок', cost: 260e6, bought: false },
+        { name: '🏭 Завод → Лаба', desc: '+5% к лаборатории за 15 заводов', cost: 450e6, bought: false },
+        { name: '🏦 Банк → Лаба', desc: '+5% к лаборатории за 15 банков', cost: 800e6, bought: false }
+    ];
+
+    // ========== ИГРОВЫЕ РАСЧЁТЫ ==========
+    function getClickPower() {
+        let power = 1;
+        if(clickUpgradesList[0]?.bought) power += buildings[0].count;
+        if(clickUpgradesList[1]?.bought) power += buildings[0].count * 0.2;
+        if(clickUpgradesList[2]?.bought) power += buildings[0].count;
+        let buildingBonus=0;
+        if(clickUpgradesList[3]?.bought) buildingBonus += 0.2;
+        if(clickUpgradesList[4]?.bought) buildingBonus += 0.7;
+        if(clickUpgradesList[5]?.bought) buildingBonus += 5;
+        if(buildingBonus>0) power += buildings.reduce((s,b)=>s+b.count,0) * buildingBonus;
+        return power;
+    }
+    function getBuildingCPS(idx){ return (buildings[idx].cps * buildings[idx].count) * Math.pow(2, buildings[idx].upgrades); }
+    function getTotalCPS() {
+        let total = 0;
+        for(let i=0;i<buildings.length;i++) total += getBuildingCPS(i);
+        let kittenBonus=0;
+        for(let k of kittenUpgradesList) if(k.bought) kittenBonus += 0.05;
+        let achievementsCount = Math.floor(buildings.reduce((s,b)=>s+b.count,0)/3);
+        let kittenMult = 1 + (achievementsCount * kittenBonus);
+        return total * kittenMult;
+    }
+    function refreshUI() {
+        document.getElementById('pointsDisplay').innerText = Math.floor(points);
+        document.getElementById('clickPowerDisplay').innerText = getClickPower().toFixed(1);
+        document.getElementById('cpsDisplay').innerText = getTotalCPS().toFixed(1);
+        let mult = getTotalCPS() / (buildings.reduce((s,b)=>s+b.cps*b.count,0)||1);
+        document.getElementById('multDisplay').innerText = mult.toFixed(1);
+        let statsHtml='';
+        for(let i=0;i<buildings.length;i++) statsHtml+=`<div class="building-stat"><span>${buildings[i].name}</span><span>${buildings[i].count} (${getBuildingCPS(i).toFixed(1)}/c)</span></div>`;
+        document.getElementById('buildingStats').innerHTML = statsHtml;
+        let buildingHtml='';
+        for(let i=0;i<buildings.length;i++){
+            let cost = Math.floor(buildings[i].baseCost * Math.pow(1.15, buildings[i].count));
+            buildingHtml+=`<div class="upgrade-item"><div><div class="upgrade-name">${buildings[i].name}</div><div class="upgrade-desc">${buildings[i].count} шт  ${getBuildingCPS(i).toFixed(1)}/с</div></div><div><div class="upgrade-price">🐸 ${cost}</div><button class="buy-btn" onclick="buyBuilding(${i})" ${points<cost ? 'disabled':''}>➕</button></div></div>`;
         }
-        function getBuildingCPS(buildingId) { return (buildings[buildingId].cps * buildings[buildingId].count) * Math.pow(2, buildings[buildingId].upgrades); }
-        function getTotalCPS() {
-            let total = 0;
-            for (let i = 0; i < buildings.length; i++) total += getBuildingCPS(i);
-            let kittenMult = 1, kittenBonus = 0;
-            for (let kitten of kittenUpgradesList) if (kitten.bought) kittenBonus += 0.05;
-            if (kittenBonus > 0) kittenMult = 1 + (achievements * kittenBonus);
-            return total * kittenMult;
+        document.getElementById('buildingList').innerHTML = buildingHtml;
+        let clickHtml='';
+        clickUpgradesList.forEach((u,idx)=>{ if(!u.bought) clickHtml+=`<div class="upgrade-item"><div><div class="upgrade-name">${u.name}</div><div class="upgrade-desc">${u.desc}</div></div><div><div class="upgrade-price">🐸 ${u.cost}</div><button class="buy-btn" onclick="buyClickUpgrade(${idx})" ${points<u.cost ? 'disabled':''}>➕</button></div></div>`; });
+        document.getElementById('clickUpgrades').innerHTML = clickHtml || '<div class="upgrade-item">✨ Всё куплено</div>';
+        let buildUpHtml='';
+        buildingUpgradesList.forEach((u,idx)=>{ if(!u.bought && buildings[u.buildingId].count>=1) buildUpHtml+=`<div class="upgrade-item"><div><div class="upgrade-name">${u.name}</div><div class="upgrade-desc">${u.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(u.cost)}</div><button class="buy-btn" onclick="buyBuildingUpgrade(${idx})" ${points<u.cost ? 'disabled':''}>➕</button></div></div>`; });
+        document.getElementById('buildingUpgrades').innerHTML = buildUpHtml || '<div class="upgrade-item">🏗️ Нет доступных</div>';
+        let kittenHtml='';
+        kittenUpgradesList.forEach((u,idx)=>{ if(!u.bought) kittenHtml+=`<div class="upgrade-item"><div><div class="upgrade-name">${u.name}</div><div class="upgrade-desc">${u.desc}</div></div><div><div class="upgrade-price">🐸 ${u.cost}</div><button class="buy-btn" onclick="buyKittenUpgrade(${idx})" ${points<u.cost ? 'disabled':''}>➕</button></div></div>`; });
+        document.getElementById('kittenUpgrades').innerHTML = kittenHtml || '<div class="upgrade-item">😺 Все котики с вами</div>';
+        let synHtml='';
+        synergyList.forEach((u,idx)=>{ if(!u.bought) synHtml+=`<div class="upgrade-item"><div><div class="upgrade-name">${u.name}</div><div class="upgrade-desc">${u.desc}</div></div><div><div class="upgrade-price">🐸 ${u.cost}</div><button class="buy-btn" onclick="buySynergyUpgrade(${idx})" ${points<u.cost ? 'disabled':''}>➕</button></div></div>`; });
+        document.getElementById('synergyUpgrades').innerHTML = synHtml || '<div class="upgrade-item">⚡ Синергии активны</div>';
+        let skinHtml='';
+        skins.forEach((s,i)=>{ let active = currentSkin===s.class; skinHtml+=`<div class="upgrade-item ${s.bought?'purchased':''}"><div><div class="upgrade-name">${s.emoji} ${s.name} ${active?'✅':''}</div><div class="upgrade-desc">${s.bought?'куплен':'стоит '+s.cost}</div></div><div><div class="upgrade-price">🐸 ${s.cost}</div><button class="buy-btn" onclick="buySkin(${i})" ${s.bought || points<s.cost ? 'disabled':''}>${s.bought?'✓':'➕'}</button></div></div>`; });
+        document.getElementById('skinUpgrades').innerHTML = skinHtml;
+        let effectHtml='';
+        effects.forEach((e,i)=>{ let active = currentEffect===e.name; effectHtml+=`<div class="upgrade-item ${e.bought?'purchased':''}"><div><div class="upgrade-name">${e.name} ${active?'✅':''}</div><div class="upgrade-desc">${e.desc}</div></div><div><div class="upgrade-price">🐸 ${e.cost}</div><button class="buy-btn" onclick="buyEffect(${i})" ${e.bought || points<e.cost ? 'disabled':''}>${e.bought?'✓':'➕'}</button></div></div>`; });
+        document.getElementById('effectUpgrades').innerHTML = effectHtml;
+    }
+
+    // ---------- ПОКУПКИ ----------
+    window.buyBuilding = function(id){
+        let cost = Math.floor(buildings[id].baseCost * Math.pow(1.15, buildings[id].count));
+        if(points>=cost){ points-=cost; buildings[id].count++; refreshUI(); autoSave(); playPurchaseSound(); }
+    };
+    window.buyClickUpgrade = function(idx){ let u=clickUpgradesList[idx]; if(points>=u.cost && !u.bought){ points-=u.cost; u.bought=true; refreshUI(); autoSave(); playPurchaseSound(); } };
+    window.buyBuildingUpgrade = function(idx){ let u=buildingUpgradesList[idx]; if(points>=u.cost && !u.bought){ points-=u.cost; u.bought=true; buildings[u.buildingId].upgrades++; refreshUI(); autoSave(); playPurchaseSound(); } };
+    window.buyKittenUpgrade = function(idx){ let u=kittenUpgradesList[idx]; if(points>=u.cost && !u.bought){ points-=u.cost; u.bought=true; refreshUI(); autoSave(); playPurchaseSound(); } };
+    window.buySynergyUpgrade = function(idx){ let u=synergyList[idx]; if(points>=u.cost && !u.bought){ points-=u.cost; u.bought=true; refreshUI(); autoSave(); playPurchaseSound(); } };
+    window.buySkin = function(idx){
+        let s=skins[idx];
+        if(points>=s.cost && !s.bought){
+            points-=s.cost; s.bought=true;
+            if(currentSkin!=='default') document.getElementById('clickButton').classList.remove(currentSkin);
+            document.getElementById('clickButton').classList.add(s.class);
+            currentSkin=s.class; refreshUI(); autoSave(); playPurchaseSound();
         }
-        
-        let audioContext = null;
-        function initAudio() { if (!audioContext) try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
-        function playCroakSound() {
-            if (!audioContext || audioContext.state !== 'running') return;
-            const now = audioContext.currentTime, osc1 = audioContext.createOscillator(), osc2 = audioContext.createOscillator(), gain = audioContext.createGain();
-            osc1.type = 'sawtooth'; osc2.type = 'triangle';
-            osc1.frequency.setValueAtTime(150, now); osc1.frequency.exponentialRampToValueAtTime(90, now + 0.15);
-            osc2.frequency.setValueAtTime(220, now); osc2.frequency.exponentialRampToValueAtTime(130, now + 0.12);
-            gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-            osc1.connect(gain); osc2.connect(gain); gain.connect(audioContext.destination);
-            osc1.start(now); osc2.start(now); osc1.stop(now + 0.25); osc2.stop(now + 0.25);
+    };
+    window.buyEffect = function(idx){
+        let e=effects[idx];
+        if(points>=e.cost && !e.bought){
+            points-=e.cost; e.bought=true;
+            currentEffect=e.name; refreshUI(); autoSave(); playPurchaseSound();
         }
-        function playPurchaseSound() {
-            if (!audioContext || audioContext.state !== 'running') return;
-            const now = audioContext.currentTime, osc = audioContext.createOscillator(), gain = audioContext.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
-            gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-            osc.connect(gain); gain.connect(audioContext.destination);
-            osc.start(now); osc.stop(now + 0.15);
+    };
+
+    // ---------- ЗВУКИ / ЭФФЕКТЫ ----------
+    let audioCtx=null;
+    function initAudio(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+    function playCroak(){
+        if(!audioCtx || audioCtx.state!=='running') return;
+        let now=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain();
+        o.type='sawtooth'; o.frequency.value=160; o.frequency.exponentialRampToValueAtTime(100, now+0.12);
+        g.gain.setValueAtTime(0.2,now); g.gain.exponentialRampToValueAtTime(0.01,now+0.2);
+        o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(now+0.2);
+    }
+    function playPurchaseSound(){
+        if(!audioCtx || audioCtx.state!=='running') return;
+        let now=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain();
+        o.type='sine'; o.frequency.value=620; o.frequency.exponentialRampToValueAtTime(400, now+0.1);
+        g.gain.value=0.12; g.gain.exponentialRampToValueAtTime(0.01, now+0.15);
+        o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(now+0.15);
+    }
+    function createEffectAtFrog(type){
+        let btn = document.getElementById('clickButton'), rect = btn.getBoundingClientRect();
+        let x = rect.left+rect.width/2 + window.scrollX, y = rect.top+rect.height/2 + window.scrollY;
+        for(let i=0;i<6;i++){
+            let d=document.createElement('div'); d.className='effect-particle';
+            d.style.left = (x + (Math.random()-0.5)*80)+'px'; d.style.top = (y + (Math.random()-0.5)*80)+'px';
+            let sym='✨';
+            if(type==='🎉 Конфетти') sym = ['🎊','🎉','✨','🎈'][Math.floor(Math.random()*4)];
+            else if(type==='🍃 Листья') sym = ['🍃','🍂','🌿'][Math.floor(Math.random()*3)];
+            else if(type==='⭐ Звёздочки') sym='⭐';
+            d.innerText = sym; d.style.fontSize='2rem';
+            document.body.appendChild(d); setTimeout(()=>d.remove(), 500);
         }
-        function createEffect(x, y, type) {
-            const effect = document.createElement('div'); effect.className = 'effect-particle';
-            effect.style.left = x + 'px'; effect.style.top = y + 'px';
-            switch(type) {
-                case '🎉 Конфетти': effect.innerHTML = ['🎊', '🎉', '✨', '🎈'][Math.floor(Math.random() * 4)]; break;
-                case '🍃 Листья': effect.innerHTML = ['🍃', '🌿', '🍂'][Math.floor(Math.random() * 3)]; break;
-                case '⭐ Звёздочки': effect.innerHTML = '⭐'; effect.style.color = '#ffd700'; break;
-                default: effect.innerHTML = '✨';
-            }
-            effect.style.fontSize = '2rem'; document.body.appendChild(effect);
-            setTimeout(() => effect.remove(), 1000);
-        }
-        
-        window.buyBuilding = function(buildingId) {
-            const building = buildings[buildingId], cost = Math.floor(building.baseCost * Math.pow(1.15, building.count));
-            if (points >= cost) { points -= cost; building.count++; achievements = buildings.reduce((sum, b) => sum + b.count, 0); playPurchaseSound(); refreshUI(); autoSave(); }
+    }
+    function handleClick(){
+        initAudio(); if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        let gain = getClickPower(); points += gain; playCroak();
+        if(currentEffect !== 'none') createEffectAtFrog(currentEffect);
+        let btn = document.getElementById('clickButton');
+        btn.classList.add('ripple'); setTimeout(()=>btn.classList.remove('ripple'),150);
+        let num = document.createElement('div'); num.className = 'floating-number';
+        num.innerText = `+${gain.toFixed(0)}`; let rect = btn.getBoundingClientRect();
+        num.style.left = (rect.left+rect.width/2 + window.scrollX)+'px';
+        num.style.top = (rect.top+rect.height/2 + window.scrollY)+'px';
+        document.body.appendChild(num); setTimeout(()=>num.remove(),700);
+        refreshUI(); autoSave();
+    }
+
+    // ---------- СОХРАНЕНИЯ + SUPABASE ----------
+    function getCookie(n){ let v=`; ${document.cookie}`; let p=v.split(`; ${n}=`); if(p.length===2) return p.pop().split(';').shift(); return null; }
+    function setCookie(n,v,d=365){ let e=new Date(); e.setTime(e.getTime()+d*864e5); document.cookie=`${n}=${v}; expires=${e.toUTCString()}; path=/`; }
+    function encrypt(d){ return btoa(encodeURIComponent(JSON.stringify(d))); }
+    function decrypt(d){ try{ return JSON.parse(decodeURIComponent(atob(d))); }catch(e){ return null; } }
+    function saveGameByIP(){ if(!currentIP) return; let state = { points, currentSkin, currentEffect, buildings: buildings.map(b=>({count:b.count,upgrades:b.upgrades})), skins:skins.map(s=>s.bought), effects:effects.map(e=>e.bought), clickUpgrades:clickUpgradesList.map(u=>u.bought), kittenUpgrades:kittenUpgradesList.map(u=>u.bought), synergies:synergyList.map(u=>u.bought), buildingUpgrades:buildingUpgradesList.map(u=>u.bought) }; setCookie(`frog_save_${currentIP.replace(/\./g,'_')}`, encrypt(state), 365); }
+    function loadGameByIP(){ if(!currentIP) return null; let saved = getCookie(`frog_save_${currentIP.replace(/\./g,'_')}`); if(saved) return decrypt(saved); return null; }
+    function autoSave(){ saveGameByIP(); if(currentIP && usersData[currentIP]){ usersData[currentIP].points = points; usersData[currentIP].maxPoints = Math.max(usersData[currentIP].maxPoints||0,points); usersData[currentIP].totalPlayTime = (usersData[currentIP].totalPlayTime||0)+1; usersData[currentIP].lastSeen = new Date().toISOString(); localStorage.setItem('frog_users', JSON.stringify(usersData)); if(supabaseClient) syncToCloud(currentIP, usersData[currentIP]); } }
+    async function initSupabase(){ supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); document.getElementById('supabaseStatus').innerHTML='☁️ Облако готово'; }
+    async function syncToCloud(ip,data){ if(!supabaseClient) return; await supabaseClient.from('users').upsert({ ip, points:data.points, max_points:data.maxPoints, play_time:data.totalPlayTime, visit_count:data.visitCount, last_seen:new Date().toISOString() },{onConflict:'ip'}); }
+    async function loadAllUsers(){ if(!supabaseClient) return; let {data,error}=await supabaseClient.from('users').select('*').order('last_seen',{ascending:false}); if(error){ alert(error.message); return; } let newData={}; for(let u of data) newData[u.ip]={ ip:u.ip, points:u.points||0, maxPoints:u.max_points||0, totalPlayTime:u.play_time||0, visitCount:u.visit_count||1, lastSeen:u.last_seen }; usersData=newData; localStorage.setItem('frog_users', JSON.stringify(usersData)); refreshAdminPanel(); alert(`Загружено ${Object.keys(usersData).length} пользователей`); }
+    function refreshAdminPanel(){ let users=Object.values(usersData); document.getElementById('totalUsers').innerText=users.length; let bots=users.filter(u=>(u.botDetection||{}).isBot).length; document.getElementById('totalBots').innerText=bots; document.getElementById('totalHumans').innerText=users.length-bots; let totalTime=users.reduce((s,u)=>s+(u.totalPlayTime||0),0); document.getElementById('totalPlayTime').innerText=Math.floor(totalTime/3600)+' ч'; let tbody=document.getElementById('usersTableBody'); if(users.length===0){ tbody.innerHTML='<tr><td colspan="7">Нет данных</td></tr>'; return; } tbody.innerHTML=users.map(u=>{ let ip=Object.keys(usersData).find(k=>usersData[k]===u); return `<tr><td>${ip?.substring(0,15)}</td><td><span class="bot-badge human">👤 Человек</span></td><td>${Math.floor(u.points||0)}</td><td>${Math.floor((u.totalPlayTime||0)/60)} мин</td><td>${(u.clientInfo?.userAgent||'?').substring(0,50)}...</td><td>${u.clientInfo?.screenRes||'?'}</td><td><button class="delete-btn" onclick="deleteUser('${ip}')">Удалить</button></td></tr>`; }).join(''); }
+    window.deleteUser=function(ip){ if(confirm(`Удалить ${ip}?`)){ delete usersData[ip]; localStorage.setItem('frog_users', JSON.stringify(usersData)); refreshAdminPanel(); } };
+
+    // ---------- АДМИН ПАНЕЛЬ (IP + ПАРОЛЬ) ----------
+    const adminModeDiv = document.getElementById('adminMode'), secretBtn = document.getElementById('adminSecretBtn');
+    function showPasswordModal(){
+        let ov = document.createElement('div'); ov.className='admin-password-overlay'; ov.style.position='fixed'; ov.style.top=0; ov.style.left=0; ov.style.right=0; ov.style.bottom=0; ov.style.background='rgba(0,0,0,0.8)'; ov.style.display='flex'; ov.style.alignItems='center'; ov.style.justifyContent='center'; ov.style.zIndex=3000;
+        ov.innerHTML=`<div class="password-modal"><h2>🔐 Доступ к админке</h2><input type="password" id="adminPasswordInput" placeholder="Введите пароль" autofocus><button id="submitAdminPassword">Войти</button><div class="error-msg" id="passError" style="color:red; display:none;">Неверный пароль!</div></div>`;
+        document.body.appendChild(ov);
+        document.getElementById('submitAdminPassword').onclick=()=>{
+            let val = document.getElementById('adminPasswordInput').value;
+            if(val === ADMIN_PASSWORD){
+                isAdminAuthenticated=true; ov.remove();
+                adminModeDiv.style.display='block'; refreshAdminPanel();
+            } else { document.getElementById('passError').style.display='block'; }
         };
-        window.buyClickUpgrade = function(index) {
-            const up = clickUpgradesList[index];
-            if (points >= up.cost && !up.bought) { points -= up.cost; up.bought = true; playPurchaseSound(); refreshUI(); autoSave(); }
-        };
-        window.buyBuildingUpgrade = function(index) {
-            const up = buildingUpgradesList[index];
-            if (points >= up.cost && !up.bought) { points -= up.cost; up.bought = true; buildings[up.buildingId].upgrades++; playPurchaseSound(); refreshUI(); autoSave(); }
-        };
-        window.buyKittenUpgrade = function(index) {
-            const up = kittenUpgradesList[index];
-            if (points >= up.cost && !up.bought) { points -= up.cost; up.bought = true; playPurchaseSound(); refreshUI(); autoSave(); }
-        };
-        window.buySynergyUpgrade = function(index) {
-            const up = synergyList[index];
-            if (points >= up.cost && !up.bought) { points -= up.cost; up.bought = true; playPurchaseSound(); refreshUI(); autoSave(); }
-        };
-        window.buySkin = function(index) {
-            const skin = skins[index];
-            if (points >= skin.cost && !skin.bought) { points -= skin.cost; skin.bought = true; if (currentSkin !== 'default') document.getElementById('clickButton').classList.remove(currentSkin); document.getElementById('clickButton').classList.add(skin.class); currentSkin = skin.class; playPurchaseSound(); refreshUI(); autoSave(); }
-        };
-        window.buyEffect = function(index) {
-            const effect = effects[index];
-            if (points >= effect.cost && !effect.bought) { points -= effect.cost; effect.bought = true; currentEffect = effect.name; playPurchaseSound(); refreshUI(); autoSave(); }
-        };
-        
-        function refreshUI() {
-            document.getElementById('pointsDisplay').textContent = Math.floor(points);
-            document.getElementById('clickPowerDisplay').textContent = getClickPower().toFixed(1);
-            document.getElementById('cpsDisplay').textContent = getTotalCPS().toFixed(1);
-            let buildingStatsHtml = '';
-            for (let i = 0; i < buildings.length; i++) buildingStatsHtml += `<div class="building-stat"><span>${buildings[i].name}</span><span>${buildings[i].count} (${getBuildingCPS(i).toFixed(1)}/c)</span></div>`;
-            document.getElementById('buildingStats').innerHTML = buildingStatsHtml;
-            let buildingHtml = '';
-            for (let i = 0; i < buildings.length; i++) { const cost = Math.floor(buildings[i].baseCost * Math.pow(1.15, buildings[i].count)); buildingHtml += `<div class="upgrade-item"><div><div class="upgrade-name">${buildings[i].name}</div><div class="upgrade-desc">${buildings[i].count} шт • ${getBuildingCPS(i).toFixed(1)}/c</div></div><div><div class="upgrade-price">🐸 ${cost}</div><button class="buy-btn" onclick="buyBuilding(${i})" ${points < cost ? 'disabled' : ''}>➕</button></div></div>`; }
-            document.getElementById('buildingList').innerHTML = buildingHtml;
-            let clickHtml = '';
-            clickUpgradesList.forEach((up, index) => { clickHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyClickUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`; });
-            document.getElementById('clickUpgrades').innerHTML = clickHtml || '<div class="upgrade-item">Все улучшения куплены!</div>';
-            let buildingUpgradeHtml = '';
-            buildingUpgradesList.forEach((up, index) => { if (buildings[up.buildingId].count > 0 || up.bought) buildingUpgradeHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyBuildingUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`; });
-            document.getElementById('buildingUpgrades').innerHTML = buildingUpgradeHtml || '<div class="upgrade-item">Нет доступных улучшений</div>';
-            let kittenHtml = '';
-            kittenUpgradesList.forEach((up, index) => { kittenHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buyKittenUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`; });
-            document.getElementById('kittenUpgrades').innerHTML = kittenHtml;
-            let synergyHtml = '';
-            synergyList.forEach((up, index) => { synergyHtml += `<div class="upgrade-item ${up.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${up.name}</div><div class="upgrade-desc">${up.desc}</div></div><div><div class="upgrade-price">🐸 ${Math.floor(up.cost)}</div><button class="buy-btn ${up.bought ? 'purchased' : ''}" onclick="buySynergyUpgrade(${index})" ${up.bought || points < up.cost ? 'disabled' : ''}>${up.bought ? '✓' : '➕'}</button></div></div>`; });
-            document.getElementById('synergyUpgrades').innerHTML = synergyHtml;
-            let skinHtml = '';
-            skins.forEach((skin, index) => { const isCurrent = currentSkin === skin.class; skinHtml += `<div class="upgrade-item ${skin.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${skin.emoji} ${skin.name} ${isCurrent ? '✅' : ''}</div><div class="upgrade-desc">${skin.bought ? 'Куплен' : 'Цена: ' + skin.cost}</div></div><div><div class="upgrade-price">🐸 ${skin.cost}</div><button class="buy-btn ${skin.bought ? 'purchased' : ''}" onclick="buySkin(${index})" ${skin.bought || points < skin.cost ? 'disabled' : ''}>${skin.bought ? '✓' : '➕'}</button></div></div>`; });
-            document.getElementById('skinUpgrades').innerHTML = skinHtml;
-            let effectHtml = '';
-            effects.forEach((effect, index) => { const isCurrent = currentEffect === effect.name; effectHtml += `<div class="upgrade-item ${effect.bought ? 'purchased' : ''}"><div><div class="upgrade-name">${effect.name} ${isCurrent ? '✅' : ''}</div><div class="upgrade-desc">${effect.desc}</div></div><div><div class="upgrade-price">🐸 ${effect.cost}</div><button class="buy-btn ${effect.bought ? 'purchased' : ''}" onclick="buyEffect(${index})" ${effect.bought || points < effect.cost ? 'disabled' : ''}>${effect.bought ? '✓' : '➕'}</button></div></div>`; });
-            document.getElementById('effectUpgrades').innerHTML = effectHtml;
+    }
+    secretBtn.onclick = () => { if(!isAdminAuthenticated) showPasswordModal(); else { adminModeDiv.style.display='block'; refreshAdminPanel(); } };
+    document.getElementById('closeAdminBtn').onclick = () => { adminModeDiv.style.display='none'; };
+    document.getElementById('exportDataBtn').onclick = () => { let data = JSON.stringify(usersData,null,2); let blob=new Blob([data],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`users_${new Date().toISOString().slice(0,10)}.json`; a.click(); };
+    document.getElementById('syncFromCloudBtn').onclick = () => loadAllUsers();
+
+    // ---------- СТАРТ ----------
+    (async function(){
+        await initSupabase();
+        let ip = localStorage.getItem('user_ip');
+        if(!ip){
+            let res = await fetch('https://api.ipify.org?format=json');
+            let j = await res.json();
+            ip = j.ip; localStorage.setItem('user_ip',ip);
         }
-        
-        function handleClick() {
-            initAudio(); if (audioContext && audioContext.state === 'suspended') audioContext.resume();
-            points += getClickPower(); playCroakSound();
-            if (currentEffect !== 'none') { const rect = document.getElementById('clickButton').getBoundingClientRect(); const x = rect.left + rect.width/2 + window.scrollX; const y = rect.top + rect.height/2 + window.scrollY; for (let i = 0; i < 5; i++) createEffect(x + (Math.random()-0.5)*80, y + (Math.random()-0.5)*80, currentEffect); }
-            document.getElementById('pointsDisplay').style.transform = 'scale(1.2)'; setTimeout(() => document.getElementById('pointsDisplay').style.transform = '', 100);
-            refreshUI(); autoSave();
+        currentIP = ip;
+        document.getElementById('ipDisplay').innerHTML = `🌐 IP: ${ip.substring(0,12)}...`;
+        if(currentIP === ADMIN_IP) secretBtn.classList.remove('hidden');
+        else secretBtn.classList.add('hidden');
+        let saved = loadGameByIP();
+        if(saved){
+            points = saved.points||0; currentSkin = saved.currentSkin||'default'; currentEffect = saved.currentEffect||'none';
+            saved.buildings?.forEach((b,i)=>{ buildings[i].count=b.count; buildings[i].upgrades=b.upgrades; });
+            saved.skins?.forEach((v,i)=>skins[i].bought=v); saved.effects?.forEach((v,i)=>effects[i].bought=v);
+            saved.clickUpgrades?.forEach((v,i)=>clickUpgradesList[i].bought=v);
+            saved.kittenUpgrades?.forEach((v,i)=>kittenUpgradesList[i].bought=v);
+            saved.synergies?.forEach((v,i)=>synergyList[i].bought=v);
+            saved.buildingUpgrades?.forEach((v,i)=>buildingUpgradesList[i].bought=v);
+            if(currentSkin!=='default') document.getElementById('clickButton').classList.add(currentSkin);
         }
-        
-        let adCooldown = 0;
-        function updateAdTimer() {
-            const timer = document.getElementById('adTimer');
-            if (adCooldown > 0) { timer.textContent = `⏳ Подождите ${adCooldown} сек`; document.getElementById('adRewardBtn').disabled = true; }
-            else { timer.textContent = '📺 Доступно! Нажми для награды'; document.getElementById('adRewardBtn').disabled = false; }
-        }
-        function claimAdReward() {
-            if (adCooldown > 0) return;
-            points += 1000 + Math.floor(Math.random() * 2000); playPurchaseSound();
-            for (let i = 0; i < 20; i++) setTimeout(() => createEffect(window.innerWidth/2, window.innerHeight/2, '🎉 Конфетти'), i * 50);
-            adCooldown = 60; updateAdTimer(); const interval = setInterval(() => { adCooldown--; updateAdTimer(); if (adCooldown <= 0) clearInterval(interval); }, 1000);
-            refreshUI(); autoSave();
-        }
-        
-        function getCookie(name) { const value = `; ${document.cookie}`; const parts = value.split(`; ${name}=`); if (parts.length === 2) return parts.pop().split(';').shift(); return null; }
-        function setCookie(name, value, days = 365) { const date = new Date(); date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); document.cookie = `${name}=${value}; expires=${date.toUTCString()}; path=/; SameSite=Strict`; }
-        function encrypt(data) { return btoa(encodeURIComponent(JSON.stringify(data))); }
-        function decrypt(encrypted) { try { return JSON.parse(decodeURIComponent(atob(encrypted))); } catch { return null; } }
-        function saveGameByIP() { if (!currentIP) return; const gameState = { points, currentSkin, currentEffect, buildings: buildings.map(b => ({ count: b.count, upgrades: b.upgrades })), skins: skins.map(s => s.bought), effects: effects.map(e => e.bought), clickUpgrades: clickUpgradesList.map(u => u.bought), kittenUpgrades: kittenUpgradesList.map(u => u.bought), synergies: synergyList.map(u => u.bought), buildingUpgrades: buildingUpgradesList.map(u => u.bought) }; setCookie(`frog_save_${currentIP.replace(/\./g, '_')}`, encrypt(gameState), 365); }
-        function loadGameByIP() { if (!currentIP) return null; const saved = getCookie(`frog_save_${currentIP.replace(/\./g, '_')}`); if (saved) return decrypt(saved); return null; }
-        function autoSave() { saveGameByIP(); if (currentIP && usersData[currentIP]) { usersData[currentIP].points = points; usersData[currentIP].maxPoints = Math.max(usersData[currentIP].maxPoints || 0, points); usersData[currentIP].totalPlayTime = (usersData[currentIP].totalPlayTime || 0) + 1; usersData[currentIP].lastSeen = new Date().toISOString(); saveUsersData(); if (supabaseClient) syncToCloud(currentIP, usersData[currentIP]); } }
-        
-        async function initSupabase() { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); document.getElementById('supabaseStatus').innerHTML = '✅ Supabase подключен'; return true; }
-        async function syncToCloud(ip, userData) { if (!supabaseClient) return; const { error } = await supabaseClient.from('users').upsert({ ip: ip, points: userData.points || 0, max_points: userData.maxPoints || 0, play_time: userData.totalPlayTime || 0, visit_count: userData.visitCount || 1, user_agent: userData.clientInfo?.userAgent, platform: userData.clientInfo?.platform, language: userData.clientInfo?.language, screen_res: userData.clientInfo?.screenRes, is_touch_device: userData.clientInfo?.isTouchDevice, is_bot: userData.botDetection?.isBot, bot_score: userData.botDetection?.score, bot_reasons: userData.botDetection?.reasons, last_seen: new Date().toISOString() }, { onConflict: 'ip' }); if (error) console.error('Ошибка синхронизации:', error); }
-        async function loadAllUsers() { if (!supabaseClient) { alert('Supabase не настроен'); return; } const { data, error } = await supabaseClient.from('users').select('*').order('last_seen', { ascending: false }); if (error) { alert('Ошибка: ' + error.message); return; } const newData = {}; for (let u of data) { newData[u.ip] = { ip: u.ip, points: u.points || 0, maxPoints: u.max_points || 0, totalPlayTime: u.play_time || 0, visitCount: u.visit_count || 1, lastSeen: u.last_seen, clientInfo: { userAgent: u.user_agent, platform: u.platform, language: u.language, screenRes: u.screen_res, isTouchDevice: u.is_touch_device }, botDetection: { isBot: u.is_bot, score: u.bot_score, reasons: u.bot_reasons } }; } usersData = newData; saveUsersData(); refreshAdminPanel(); alert(`Загружено ${Object.keys(usersData).length} пользователей`); }
-        
-        function detectBot(ua) { const botPatterns = ['bot', 'crawler', 'spider', 'headless', 'puppeteer', 'selenium', 'curl']; const isBot = botPatterns.some(p => ua.toLowerCase().includes(p)); return { isBot, score: isBot ? 3 : 0, reasons: isBot ? 'UA match' : 'normal' }; }
-        function collectClientInfo() { return { userAgent: navigator.userAgent, platform: navigator.platform, language: navigator.language, screenRes: `${window.screen.width}x${window.screen.height}`, isTouchDevice: 'ontouchstart' in window || navigator.maxTouchPoints > 0 }; }
-        function refreshAdminPanel() {
-            const users = Object.values(usersData);
-            document.getElementById('totalUsers').textContent = users.length;
-            document.getElementById('totalBots').textContent = users.filter(u => u.botDetection?.isBot).length;
-            document.getElementById('totalHumans').textContent = users.length - users.filter(u => u.botDetection?.isBot).length;
-            const totalTime = users.reduce((s, u) => s + (u.totalPlayTime || 0), 0);
-            document.getElementById('totalPlayTime').textContent = Math.floor(totalTime / 3600) + ' ч';
-            const tbody = document.getElementById('usersTableBody');
-            if (users.length === 0) { tbody.innerHTML = '.<td colspan="7">Нет данных</td>'; return; }
-            tbody.innerHTML = users.map(u => { const ip = Object.keys(usersData).find(k => usersData[k] === u); const isBot = u.botDetection?.isBot; return `<tr><td>${ip?.substring(0, 15)}</td><td><span class="bot-badge ${isBot ? 'bot' : 'human'}">${isBot ? '🤖 БОТ' : '👤 ЧЕЛОВЕК'}</span></td><td>${Math.floor(u.points || 0)}</td><td>${Math.floor((u.totalPlayTime || 0) / 60)} мин</td><td title="${u.clientInfo?.userAgent || ''}">${u.clientInfo?.userAgent?.substring(0, 50) || '?'}...</td><td>${u.clientInfo?.screenRes || '?'}</td><td><button class="delete-btn" onclick="deleteUser('${ip}')">Удалить</button></td></tr>`; }).join('');
-        }
-        function saveUsersData() { localStorage.setItem('frog_users', JSON.stringify(usersData)); }
-        function loadUsersData() { const saved = localStorage.getItem('frog_users'); if (saved) try { usersData = JSON.parse(saved); } catch(e) {} }
-        window.deleteUser = function(ip) { if (confirm(`Удалить ${ip}?`)) { delete usersData[ip]; saveUsersData(); refreshAdminPanel(); } };
-        
-        // ============= АДМИН ПАНЕЛЬ С IP-ЗАЩИТОЙ =============
-        let isAdminAuthenticated = false;
-        const adminModeDiv = document.getElementById('adminMode');
-        const secretBtn = document.getElementById('adminSecretBtn');
-        
-        function showPasswordModal() {
-            const overlay = document.createElement('div');
-            overlay.className = 'admin-password-overlay';
-            overlay.id = 'adminPasswordOverlay';
-            overlay.innerHTML = `
-                <div class="password-modal">
-                    <h2>🔐 Доступ к админ-панели</h2>
-                    <input type="password" id="adminPassword" placeholder="Введите пароль" autofocus>
-                    <button id="submitPassword">Войти</button>
-                    <div class="error-msg" id="passwordError">Неверный пароль!</div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-            
-            document.getElementById('submitPassword').onclick = () => {
-                const input = document.getElementById('adminPassword').value;
-                if (input === ADMIN_PASSWORD) {
-                    isAdminAuthenticated = true;
-                    overlay.remove();
-                    adminModeDiv.style.display = 'block';
-                    refreshAdminPanel();
-                } else {
-                    document.getElementById('passwordError').style.display = 'block';
-                }
-            };
-            document.getElementById('adminPassword').onkeypress = (e) => { if (e.key === 'Enter') document.getElementById('submitPassword').click(); };
-        }
-        
-        // Показываем кнопку только если IP совпадает с ADMIN_IP
-        function checkAdminAccess(ip) {
-            if (ip === ADMIN_IP) {
-                secretBtn.classList.remove('hidden');
-                console.log('✅ Админ-доступ разрешён по IP');
-            } else {
-                secretBtn.classList.add('hidden');
-                console.log('❌ Админ-доступ запрещён (не ваш IP)');
-            }
-        }
-        
-        secretBtn.onclick = () => {
-            if (!isAdminAuthenticated) {
-                showPasswordModal();
-            } else {
-                adminModeDiv.style.display = 'block';
-                refreshAdminPanel();
-            }
-        };
-        
-        // Закрытие админки
-        document.getElementById('closeAdminBtn').onclick = () => { adminModeDiv.style.display = 'none'; };
-        document.getElementById('exportDataBtn').onclick = () => { const data = JSON.stringify(usersData, null, 2); const blob = new Blob([data], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `users_${new Date().toISOString().slice(0,10)}.json`; a.click(); };
-        document.getElementById('syncFromCloudBtn').onclick = () => loadAllUsers();
-        
-        // ПЕРЕКЛЮЧЕНИЕ МАГАЗИНОВ
-        document.getElementById('skinShopBtn').onclick = () => { const el = document.getElementById('skinShop'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; };
-        document.getElementById('effectShopBtn').onclick = () => { const el = document.getElementById('effectShop'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; };
-        document.getElementById('resetBtn').onclick = () => { if (confirm('Сбросить весь прогресс?')) { if (currentIP) setCookie(`frog_save_${currentIP.replace(/\./g, '_')}`, '', -1); location.reload(); } };
-        
+        refreshUI(); initAudio();
         document.getElementById('clickButton').addEventListener('click', handleClick);
-        document.getElementById('adRewardBtn').addEventListener('click', claimAdReward);
-        
-        // ЗАПУСК
-        (async function() {
-            await initSupabase();
-            const ip = await new Promise(resolve => {
-                let ip = localStorage.getItem('user_ip');
-                if (ip) resolve(ip);
-                else fetch('https://api.ipify.org?format=json').then(r => r.json()).then(data => { localStorage.setItem('user_ip', data.ip); resolve(data.ip); }).catch(() => resolve('unknown_' + Math.random().toString(36).substring(7)));
-            });
-            currentIP = ip;
-            document.getElementById('ipDisplay').innerHTML = `🌐 IP: ${currentIP.substring(0, 15)}`;
-            
-            // Проверяем, админ ли это
-            checkAdminAccess(currentIP);
-            
-            loadUsersData();
-            const savedGame = loadGameByIP();
-            if (savedGame) {
-                points = savedGame.points || 0;
-                currentSkin = savedGame.currentSkin || 'default';
-                currentEffect = savedGame.currentEffect || 'none';
-                savedGame.buildings?.forEach((b, i) => { buildings[i].count = b.count; buildings[i].upgrades = b.upgrades; });
-                savedGame.skins?.forEach((val, i) => { if (skins[i]) skins[i].bought = val; });
-                savedGame.effects?.forEach((val, i) => { if (effects[i]) effects[i].bought = val; });
-                savedGame.clickUpgrades?.forEach((val, i) => { if (clickUpgradesList[i]) clickUpgradesList[i].bought = val; });
-                savedGame.kittenUpgrades?.forEach((val, i) => { if (kittenUpgradesList[i]) kittenUpgradesList[i].bought = val; });
-                savedGame.synergies?.forEach((val, i) => { if (synergyList[i]) synergyList[i].bought = val; });
-                savedGame.buildingUpgrades?.forEach((val, i) => { if (buildingUpgradesList[i]) buildingUpgradesList[i].bought = val; });
-                achievements = buildings.reduce((sum, b) => sum + b.count, 0);
-                if (currentSkin !== 'default') document.getElementById('clickButton').classList.add(currentSkin);
-            }
-            
-            const clientInfo = collectClientInfo();
-            const botCheck = detectBot(clientInfo.userAgent);
-            if (!usersData[currentIP]) {
-                usersData[currentIP] = { ip: currentIP, points: points, maxPoints: points, totalPlayTime: 0, visitCount: 1, clientInfo: clientInfo, botDetection: botCheck, lastSeen: new Date().toISOString() };
-            } else {
-                usersData[currentIP].points = points;
-                usersData[currentIP].maxPoints = Math.max(usersData[currentIP].maxPoints || 0, points);
-                usersData[currentIP].visitCount++;
-                usersData[currentIP].lastSeen = new Date().toISOString();
-                usersData[currentIP].clientInfo = clientInfo;
-            }
-            saveUsersData();
-            if (supabaseClient) syncToCloud(currentIP, usersData[currentIP]);
-            
-            refreshUI();
-            initAudio();
-            
-            setInterval(() => { points += getTotalCPS(); refreshUI(); autoSave(); }, 1000);
-            setInterval(autoSave, 30000);
-        })();
-    </script>
+        setInterval(()=>{ points += getTotalCPS(); refreshUI(); autoSave(); }, 1000);
+        setInterval(autoSave, 30000);
+        document.getElementById('skinShopBtn').onclick = ()=>{ let b=document.getElementById('skinShop'); b.style.display = b.style.display==='none'?'block':'none'; };
+        document.getElementById('effectShopBtn').onclick = ()=>{ let b=document.getElementById('effectShop'); b.style.display = b.style.display==='none'?'block':'none'; };
+        document.getElementById('resetBtn').onclick = ()=>{ if(confirm('❗ Сбросить прогресс?')){ if(currentIP) setCookie(`frog_save_${currentIP.replace(/\./g,'_')}`,'',-1); location.reload(); } };
+    })();
+</script>
 </body>
 </html>
